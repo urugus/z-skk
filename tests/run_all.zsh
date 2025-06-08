@@ -12,6 +12,13 @@ print "=== Running all z-skk tests ===\n"
 for test_file in "$SCRIPT_DIR"/test_*.zsh; do
     if [[ -f "$test_file" && "$test_file" != "$0" ]]; then
         test_name="${test_file:t}"
+
+        # Skip interactive tests in CI
+        if [[ "$test_name" == "test_interactive.zsh" || "$test_name" == "manual_test.zsh" ]]; then
+            print "Skipping interactive test: $test_name"
+            continue
+        fi
+
         print "Running: $test_name"
         print "---"
 
