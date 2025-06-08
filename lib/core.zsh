@@ -33,8 +33,15 @@ z-skk-init() {
     # Set default mode
     SKK_MODE="ascii"
 
-    # Load keybindings module
+    # Load modules
     local lib_dir="${Z_SKK_DIR}/lib"
+
+    # Load conversion module
+    if [[ -f "$lib_dir/conversion.zsh" ]]; then
+        source "$lib_dir/conversion.zsh"
+    fi
+
+    # Load keybindings module
     if [[ -f "$lib_dir/keybindings.zsh" ]]; then
         source "$lib_dir/keybindings.zsh"
     fi
