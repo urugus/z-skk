@@ -380,6 +380,37 @@ test_basic_input() {
 3. 実際の入力テスト
 4. フィードバックの収集
 
+### コミット前のCI検証
+
+**重要**: コミットする前に、必ず以下のCIチェックをローカルで実行し、全てパスすることを確認すること。
+
+```bash
+# 簡単な方法: pre-commit-checkスクリプトを実行
+zsh scripts/pre-commit-check.zsh
+
+# または、手動で各チェックを実行:
+# 1. 全テストの実行
+zsh tests/run_all.zsh
+
+# 2. ファイル権限の確認
+find . -name "*.zsh" | while read -r file; do
+    [[ -x "$file" ]] || echo "Error: $file is not executable"
+done
+
+# 3. 末尾空白のチェック
+if grep -r '[[:space:]]$' --include="*.zsh" .; then
+    echo "Error: Found trailing whitespace"
+    exit 1
+fi
+
+# 4. タブ/スペースの一貫性チェック
+if grep -r $'^\t' --include="*.zsh" .; then
+    echo "Warning: Found tabs used for indentation"
+fi
+```
+
+これらのチェックが全てパスしない場合は、問題を修正してから再度確認すること。
+
 ### コミット方針
 
 - 各機能実装ごとにコミット
