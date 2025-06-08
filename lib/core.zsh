@@ -5,7 +5,7 @@
 z-skk-init() {
     # Plugin initialization placeholder
     print "z-skk: Initializing (v${Z_SKK_VERSION})"
-    
+
     # More initialization will be added here
     return 0
 }

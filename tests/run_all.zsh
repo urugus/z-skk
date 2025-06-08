@@ -14,7 +14,7 @@ for test_file in "$SCRIPT_DIR"/test_*.zsh; do
         test_name="${test_file:t}"
         print "Running: $test_name"
         print "---"
-        
+
         # Run test and capture result
         if zsh "$test_file"; then
             TEST_RESULTS[$test_name]="PASSED"
@@ -22,7 +22,7 @@ for test_file in "$SCRIPT_DIR"/test_*.zsh; do
             TEST_RESULTS[$test_name]="FAILED"
             (( TOTAL_FAILED++ ))
         fi
-        
+
         print "\n"
     fi
 done

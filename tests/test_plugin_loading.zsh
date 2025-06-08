@@ -11,7 +11,7 @@ typeset -g TESTS_FAILED=0
 assert() {
     local description="$1"
     local condition="$2"
-    
+
     if eval "$condition"; then
         print "✓ $description"
         (( TESTS_PASSED++ ))

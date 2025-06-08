@@ -16,6 +16,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
+    - name: Make test files executable
+      run: chmod +x tests/*.zsh
+    
     - name: Install zsh
       shell: bash
       run: |
