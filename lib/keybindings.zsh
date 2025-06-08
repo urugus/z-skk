@@ -46,13 +46,46 @@ z-skk-self-insert() {
         return
     fi
 
-    # Future: Handle SKK input logic here
-    # For now, just pass through
+    # Handle hiragana mode
+    if [[ $SKK_MODE == "hiragana" ]]; then
+        # Add key to romaji buffer
+        ROMAJI_BUFFER+="$KEYS"
+
+        # Try to convert
+        z-skk-convert-romaji
+
+        # If we got a conversion, insert it
+        if [[ -n "$Z_SKK_CONVERTED" ]]; then
+            LBUFFER+="$Z_SKK_CONVERTED"
+        fi
+
+        # Redraw the line to show the update
+        zle -R
+
+        return
+    fi
+
+    # Default: pass through
     zle .self-insert
 }
 
-# Register ZLE widget
+# Temporary mode switching functions
+z-skk-hiragana-mode() {
+    SKK_MODE="hiragana"
+    ROMAJI_BUFFER=""
+    echo "Mode: hiragana"
+}
+
+z-skk-ascii-mode() {
+    SKK_MODE="ascii"
+    ROMAJI_BUFFER=""
+    echo "Mode: ascii"
+}
+
+# Register ZLE widgets
 zle -N z-skk-self-insert
+zle -N z-skk-hiragana-mode
+zle -N z-skk-ascii-mode
 
 # Setup keybindings
 z-skk-setup-keybindings() {
@@ -71,9 +104,9 @@ z-skk-setup-keybindings() {
         bindkey "$c" z-skk-self-insert
     done
 
-    # Future: Add mode switching keys
-    # bindkey "^J" z-skk-toggle-kana-mode
-    # bindkey "^L" z-skk-ascii-mode
+    # Temporary mode switching keys
+    bindkey "^J" z-skk-hiragana-mode
+    bindkey "^L" z-skk-ascii-mode
 }
 
 # Initialize keybindings when sourced
