@@ -1,0 +1,20 @@
+# Dictionary files
+*.skk-jisyo
+*.skk-user-jisyo
+dict/*.L
+dict/*.gz
+
+# Test artifacts
+*.tmp
+*.log
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

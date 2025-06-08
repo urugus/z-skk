@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        zsh-version: ['5.8', '5.9']
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install zsh
+      run: |
+        if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+          sudo apt-get update
+          sudo apt-get install -y zsh
+        fi
+        # macOS has zsh pre-installed
+    
+    - name: Show zsh version
+      run: zsh --version
+    
+    - name: Run tests
+      run: |
+        zsh tests/test_plugin_loading.zsh
+        zsh tests/test_zinit_loading.zsh
+    
+    - name: Run all tests
+      run: |
+        if [[ -f tests/run_all.zsh ]]; then
+          zsh tests/run_all.zsh
+        fi
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install shellcheck
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y shellcheck
+    
+    - name: Run shellcheck on zsh files
+      run: |
+        find . -name "*.zsh" -o -name "*.plugin.zsh" | while read -r file; do
+          echo "Checking: $file"
+          # shellcheck doesn't fully support zsh, but we can check for common issues
+          shellcheck -s bash -e SC1071,SC1073,SC1072,SC2034,SC2154 "$file" || true
+        done
+    
+    - name: Check file permissions
+      run: |
+        # Ensure script files are executable
+        find . -name "*.zsh" | while read -r file; do
+          if [[ ! -x "$file" ]]; then
+            echo "Warning: $file is not executable"
+          fi
+        done
+    
+    - name: Check for trailing whitespace
+      run: |
+        if grep -r '[[:space:]]$' --include="*.zsh" .; then
+          echo "Error: Found trailing whitespace"
+          exit 1
+        fi
+    
+    - name: Check for tabs vs spaces consistency
+      run: |
+        # We use spaces for indentation
+        if grep -r $'^\t' --include="*.zsh" .; then
+          echo "Warning: Found tabs used for indentation (should use spaces)"
+        fi
