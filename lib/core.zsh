@@ -1,11 +1,38 @@
 #!/usr/bin/env zsh
 # Core functionality for z-skk
 
+# State variables
+typeset -g SKK_MODE="ascii"          # Current input mode
+typeset -g SKK_CONVERTING=0          # Conversion state flag
+typeset -g SKK_BUFFER=""             # Input buffer
+typeset -g -a SKK_CANDIDATES=()      # Conversion candidates
+typeset -g SKK_CANDIDATE_INDEX=0     # Current candidate index
+
+# Mode definitions
+typeset -gA SKK_MODES=(
+    [hiragana]="かな"
+    [katakana]="カナ"
+    [ascii]="英数"
+    [zenkaku]="全英"
+    [abbrev]="Abbrev"
+)
+
+# Reset state function
+z-skk-reset-state() {
+    SKK_BUFFER=""
+    SKK_CONVERTING=0
+    SKK_CANDIDATES=()
+    SKK_CANDIDATE_INDEX=0
+}
+
 # Initialize z-skk
 z-skk-init() {
-    # Plugin initialization placeholder
-    print "z-skk: Initializing (v${Z_SKK_VERSION})"
+    # Initialize state
+    z-skk-reset-state
 
-    # More initialization will be added here
+    # Set default mode
+    SKK_MODE="ascii"
+
+    print "z-skk: Initialized (v${Z_SKK_VERSION})"
     return 0
 }

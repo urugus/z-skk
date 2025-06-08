@@ -4,23 +4,9 @@
 # Test framework setup
 typeset -g TEST_DIR="${0:A:h}"
 typeset -g PROJECT_DIR="${TEST_DIR:h}"
-typeset -g TESTS_PASSED=0
-typeset -g TESTS_FAILED=0
 
-# Simple assertion function
-assert() {
-    local description="$1"
-    local condition="$2"
-
-    if eval "$condition"; then
-        print "✓ $description"
-        (( TESTS_PASSED++ ))
-    else
-        print "✗ $description"
-        print "  Condition failed: $condition"
-        (( TESTS_FAILED++ ))
-    fi
-}
+# Source test utilities
+source "$TEST_DIR/test_utils.zsh"
 
 # Test plugin file exists
 assert "Plugin file exists" "[[ -f '$PROJECT_DIR/z-skk.plugin.zsh' ]]"
@@ -46,11 +32,5 @@ assert "z-skk-init function is defined" "(( \${+functions[z-skk-init]} ))"
 # Test z-skk-unload function is defined
 assert "z-skk-unload function is defined" "(( \${+functions[z-skk-unload]} ))"
 
-# Summary
-print "\n===== Test Summary ====="
-print "Passed: $TESTS_PASSED"
-print "Failed: $TESTS_FAILED"
-print "======================="
-
-# Exit with appropriate code
-[[ $TESTS_FAILED -eq 0 ]]
+# Print summary and exit
+print_test_summary
