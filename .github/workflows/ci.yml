@@ -12,12 +12,12 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        zsh-version: ['5.8', '5.9']
     
     steps:
     - uses: actions/checkout@v3
     
     - name: Install zsh
+      shell: bash
       run: |
         if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
           sudo apt-get update
@@ -34,6 +34,7 @@ jobs:
         zsh tests/test_zinit_loading.zsh
     
     - name: Run all tests
+      shell: bash
       run: |
         if [[ -f tests/run_all.zsh ]]; then
           zsh tests/run_all.zsh
@@ -51,14 +52,16 @@ jobs:
         sudo apt-get install -y shellcheck
     
     - name: Run shellcheck on zsh files
+      shell: bash
       run: |
-        find . -name "*.zsh" -o -name "*.plugin.zsh" | while read -r file; do
+        find . \( -name "*.zsh" -o -name "*.plugin.zsh" \) -type f | while read -r file; do
           echo "Checking: $file"
           # shellcheck doesn't fully support zsh, but we can check for common issues
           shellcheck -s bash -e SC1071,SC1073,SC1072,SC2034,SC2154 "$file" || true
         done
     
     - name: Check file permissions
+      shell: bash
       run: |
         # Ensure script files are executable
         find . -name "*.zsh" | while read -r file; do
@@ -75,6 +78,7 @@ jobs:
         fi
     
     - name: Check for tabs vs spaces consistency
+      shell: bash
       run: |
         # We use spaces for indentation
         if grep -r $'^\t' --include="*.zsh" .; then
