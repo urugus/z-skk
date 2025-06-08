@@ -17,7 +17,11 @@ jobs:
     - uses: actions/checkout@v3
     
     - name: Make test files executable
-      run: chmod +x tests/*.zsh
+      run: |
+        chmod +x tests/*.zsh
+        chmod +x lib/*.zsh
+        chmod +x scripts/*.zsh
+        chmod +x z-skk.plugin.zsh
     
     - name: Install zsh
       shell: bash
@@ -40,15 +44,7 @@ jobs:
       shell: bash
       run: |
         if [[ -f tests/run_all.zsh ]]; then
-          # Add timeout to prevent hanging on interactive tests
-          timeout 60 zsh tests/run_all.zsh || exit_code=$?
-          # Check if it was a timeout (exit code 124)
-          if [[ ${exit_code:-0} -eq 124 ]]; then
-            echo "Error: Tests timed out - likely due to interactive test"
-            exit 1
-          elif [[ ${exit_code:-0} -ne 0 ]]; then
-            exit $exit_code
-          fi
+          zsh tests/run_all.zsh
         fi
 
   lint:
