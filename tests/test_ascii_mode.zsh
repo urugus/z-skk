@@ -12,7 +12,7 @@ source "$TEST_DIR/test_utils.zsh"
 source "$PROJECT_DIR/z-skk.plugin.zsh"
 
 # Test ASCII mode is default
-assert "Default mode is ASCII" "[[ \$SKK_MODE == 'ascii' ]]"
+assert "Default mode is ASCII" "[[ \$Z_SKK_MODE == 'ascii' ]]"
 
 # Test widget functions exist
 assert "z-skk-self-insert widget exists" "(( \${+functions[z-skk-self-insert]} ))"

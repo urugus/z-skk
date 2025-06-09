@@ -27,7 +27,7 @@ z-skk-should-pass-through() {
     fi
 
     # In ASCII mode, everything passes through
-    if [[ $SKK_MODE == "ascii" ]]; then
+    if [[ $Z_SKK_MODE == "ascii" ]]; then
         Z_SKK_PASS_THROUGH=1
         return 0
     fi
@@ -47,9 +47,9 @@ z-skk-self-insert() {
     fi
 
     # Handle hiragana mode
-    if [[ $SKK_MODE == "hiragana" ]]; then
+    if [[ $Z_SKK_MODE == "hiragana" ]]; then
         # Add key to romaji buffer
-        ROMAJI_BUFFER+="$KEYS"
+        Z_SKK_ROMAJI_BUFFER+="$KEYS"
 
         # Try to convert
         z-skk-convert-romaji
@@ -71,14 +71,14 @@ z-skk-self-insert() {
 
 # Temporary mode switching functions
 z-skk-hiragana-mode() {
-    SKK_MODE="hiragana"
-    ROMAJI_BUFFER=""
+    Z_SKK_MODE="hiragana"
+    Z_SKK_ROMAJI_BUFFER=""
     echo "Mode: hiragana"
 }
 
 z-skk-ascii-mode() {
-    SKK_MODE="ascii"
-    ROMAJI_BUFFER=""
+    Z_SKK_MODE="ascii"
+    Z_SKK_ROMAJI_BUFFER=""
     echo "Mode: ascii"
 }
 

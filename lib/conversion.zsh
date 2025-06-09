@@ -2,10 +2,10 @@
 # Romaji to kana conversion functionality
 
 # Romaji input buffer
-typeset -g ROMAJI_BUFFER=""
+typeset -g Z_SKK_ROMAJI_BUFFER=""
 
 # Romaji to Hiragana conversion table
-typeset -gA ROMAJI_TO_HIRAGANA=(
+typeset -gA Z_SKK_ROMAJI_TO_HIRAGANA=(
     # Vowels
     [a]="あ"  [i]="い"  [u]="う"  [e]="え"  [o]="お"
 
@@ -81,7 +81,7 @@ z-skk-is-partial-romaji() {
     local key
 
     # Check if any key in the table starts with this input
-    for key in ${(k)ROMAJI_TO_HIRAGANA}; do
+    for key in ${(k)Z_SKK_ROMAJI_TO_HIRAGANA}; do
         if [[ "$key" == "$input"* ]]; then
             return 0
         fi
@@ -95,40 +95,40 @@ z-skk-convert-romaji() {
     Z_SKK_CONVERTED=""
 
     # Empty buffer
-    if [[ -z "$ROMAJI_BUFFER" ]]; then
+    if [[ -z "$Z_SKK_ROMAJI_BUFFER" ]]; then
         return 0
     fi
 
     # Special handling for single 'n' - don't convert if it could be part of na, ni, etc.
-    if [[ "$ROMAJI_BUFFER" == "n" ]] && z-skk-is-partial-romaji "n"; then
+    if [[ "$Z_SKK_ROMAJI_BUFFER" == "n" ]] && z-skk-is-partial-romaji "n"; then
         return 0
     fi
 
     # Exact match found
-    if [[ -n "${ROMAJI_TO_HIRAGANA[$ROMAJI_BUFFER]}" ]]; then
-        Z_SKK_CONVERTED="${ROMAJI_TO_HIRAGANA[$ROMAJI_BUFFER]}"
-        ROMAJI_BUFFER=""
+    if [[ -n "${Z_SKK_ROMAJI_TO_HIRAGANA[$Z_SKK_ROMAJI_BUFFER]}" ]]; then
+        Z_SKK_CONVERTED="${Z_SKK_ROMAJI_TO_HIRAGANA[$Z_SKK_ROMAJI_BUFFER]}"
+        Z_SKK_ROMAJI_BUFFER=""
         return 0
     fi
 
     # Check if it could be a partial match
-    if z-skk-is-partial-romaji "$ROMAJI_BUFFER"; then
+    if z-skk-is-partial-romaji "$Z_SKK_ROMAJI_BUFFER"; then
         # Keep buffer as is, waiting for more input
         return 0
     fi
 
     # No match possible - try to convert the longest prefix
     local i
-    for (( i=${#ROMAJI_BUFFER}; i>0; i-- )); do
-        local prefix="${ROMAJI_BUFFER:0:$i}"
-        if [[ -n "${ROMAJI_TO_HIRAGANA[$prefix]}" ]]; then
-            Z_SKK_CONVERTED="${ROMAJI_TO_HIRAGANA[$prefix]}"
-            ROMAJI_BUFFER="${ROMAJI_BUFFER:$i}"
+    for (( i=${#Z_SKK_ROMAJI_BUFFER}; i>0; i-- )); do
+        local prefix="${Z_SKK_ROMAJI_BUFFER:0:$i}"
+        if [[ -n "${Z_SKK_ROMAJI_TO_HIRAGANA[$prefix]}" ]]; then
+            Z_SKK_CONVERTED="${Z_SKK_ROMAJI_TO_HIRAGANA[$prefix]}"
+            Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER:$i}"
             return 0
         fi
     done
 
     # No conversion possible - output first character as-is
-    Z_SKK_CONVERTED="${ROMAJI_BUFFER:0:1}"
-    ROMAJI_BUFFER="${ROMAJI_BUFFER:1}"
+    Z_SKK_CONVERTED="${Z_SKK_ROMAJI_BUFFER:0:1}"
+    Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER:1}"
 }

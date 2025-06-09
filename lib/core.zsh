@@ -2,14 +2,14 @@
 # Core functionality for z-skk
 
 # State variables
-typeset -g SKK_MODE="ascii"          # Current input mode
-typeset -g SKK_CONVERTING=0          # Conversion state flag
-typeset -g SKK_BUFFER=""             # Input buffer
-typeset -g -a SKK_CANDIDATES=()      # Conversion candidates
-typeset -g SKK_CANDIDATE_INDEX=0     # Current candidate index
+typeset -g Z_SKK_MODE="ascii"          # Current input mode
+typeset -g Z_SKK_CONVERTING=0          # Conversion state flag
+typeset -g Z_SKK_BUFFER=""             # Input buffer
+typeset -g -a Z_SKK_CANDIDATES=()      # Conversion candidates
+typeset -g Z_SKK_CANDIDATE_INDEX=0     # Current candidate index
 
 # Mode definitions
-typeset -gA SKK_MODES=(
+typeset -gA Z_SKK_MODES=(
     [hiragana]="かな"
     [katakana]="カナ"
     [ascii]="英数"
@@ -19,10 +19,10 @@ typeset -gA SKK_MODES=(
 
 # Reset state function
 z-skk-reset-state() {
-    SKK_BUFFER=""
-    SKK_CONVERTING=0
-    SKK_CANDIDATES=()
-    SKK_CANDIDATE_INDEX=0
+    Z_SKK_BUFFER=""
+    Z_SKK_CONVERTING=0
+    Z_SKK_CANDIDATES=()
+    Z_SKK_CANDIDATE_INDEX=0
 }
 
 # Initialize z-skk
@@ -31,7 +31,7 @@ z-skk-init() {
     z-skk-reset-state
 
     # Set default mode
-    SKK_MODE="ascii"
+    Z_SKK_MODE="ascii"
 
     # Load modules
     local lib_dir="${Z_SKK_DIR}/lib"

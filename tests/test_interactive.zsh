@@ -13,7 +13,7 @@ print "2. Type 'nihongo' to see it convert to にほんご"
 print "3. Press Ctrl+L to switch back to ASCII mode"
 print "4. Press Ctrl+C to exit"
 print ""
-print "Current mode: $SKK_MODE"
+print "Current mode: $Z_SKK_MODE"
 print ""
 
 # Start interactive shell
