@@ -87,6 +87,7 @@ z-skk-self-insert() {
 zle -N z-skk-self-insert
 zle -N z-skk-toggle-kana
 zle -N z-skk-ascii-mode
+zle -N z-skk-hiragana-mode
 
 # Setup keybindings
 z-skk-setup-keybindings() {
