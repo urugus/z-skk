@@ -28,6 +28,11 @@ z-skk-set-mode() {
                 # Future: Initialize abbrev mode
                 ;;
         esac
+
+        # Update display if available
+        if (( ${+functions[z-skk-update-display]} )); then
+            z-skk-update-display
+        fi
     fi
 
     return 0

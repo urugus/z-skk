@@ -48,9 +48,19 @@ z-skk-init() {
         source "$lib_dir/modes.zsh"
     fi
 
+    # Load display module
+    if [[ -f "$lib_dir/display.zsh" ]]; then
+        source "$lib_dir/display.zsh"
+    fi
+
     # Load keybindings module
     if [[ -f "$lib_dir/keybindings.zsh" ]]; then
         source "$lib_dir/keybindings.zsh"
+    fi
+
+    # Setup display
+    if (( ${+functions[z-skk-display-setup]} )); then
+        z-skk-display-setup
     fi
 
     print "z-skk: Initialized (v${Z_SKK_VERSION})"

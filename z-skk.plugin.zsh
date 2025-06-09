@@ -32,6 +32,16 @@ typeset -g Z_SKK_DIR="${0:A:h}"
 
 # Cleanup function for unloading
 z-skk-unload() {
-    # Will be implemented to clean up keybindings and state
+    # Clean up display
+    if (( ${+functions[z-skk-display-cleanup]} )); then
+        z-skk-display-cleanup
+    fi
+
+    # Reset state
+    if (( ${+functions[z-skk-reset-state]} )); then
+        z-skk-reset-state
+    fi
+
     print "z-skk: Unloaded"
 }
+
