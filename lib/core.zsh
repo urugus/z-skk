@@ -23,6 +23,8 @@ z-skk-reset-state() {
     Z_SKK_CONVERTING=0
     Z_SKK_CANDIDATES=()
     Z_SKK_CANDIDATE_INDEX=0
+    # Reset romaji buffer if it exists (from conversion module)
+    [[ -v Z_SKK_ROMAJI_BUFFER ]] && Z_SKK_ROMAJI_BUFFER=""
 }
 
 # Initialize z-skk
@@ -39,6 +41,11 @@ z-skk-init() {
     # Load conversion module
     if [[ -f "$lib_dir/conversion.zsh" ]]; then
         source "$lib_dir/conversion.zsh"
+    fi
+
+    # Load modes module
+    if [[ -f "$lib_dir/modes.zsh" ]]; then
+        source "$lib_dir/modes.zsh"
     fi
 
     # Load keybindings module
