@@ -83,11 +83,13 @@ z-skk-self-insert() {
     zle .self-insert
 }
 
-# Register ZLE widgets
-zle -N z-skk-self-insert
-zle -N z-skk-toggle-kana
-zle -N z-skk-ascii-mode
-zle -N z-skk-hiragana-mode
+# Register ZLE widgets (only in interactive shells or when zle is available)
+if [[ -o interactive ]] || (( ${+zle} )); then
+    zle -N z-skk-self-insert
+    zle -N z-skk-toggle-kana
+    zle -N z-skk-ascii-mode
+    zle -N z-skk-hiragana-mode
+fi
 
 # Setup keybindings
 z-skk-setup-keybindings() {
@@ -109,7 +111,7 @@ z-skk-setup-keybindings() {
     # Mode switching keys
     bindkey "^J" z-skk-toggle-kana    # Toggle hiragana/ascii
     bindkey "^L" z-skk-ascii-mode     # Force ASCII mode
-    
+
     # Mark as setup
     typeset -g Z_SKK_KEYBINDINGS_SETUP=1
 }
@@ -125,17 +127,20 @@ fi
 z-skk-line-init() {
     # Setup keybindings if not already done
     z-skk-setup-keybindings
-    
+
     # Call original zle-line-init if it exists
     if (( ${+functions[_z_skk_orig_line_init]} )); then
         _z_skk_orig_line_init "$@"
     fi
 }
 
-# Save original zle-line-init if it exists
-if (( ${+functions[zle-line-init]} )); then
-    functions[_z_skk_orig_line_init]="${functions[zle-line-init]}"
-fi
+# Only setup zle-line-init in interactive shells
+if [[ -o interactive ]]; then
+    # Save original zle-line-init if it exists
+    if (( ${+functions[zle-line-init]} )); then
+        functions[_z_skk_orig_line_init]="${functions[zle-line-init]}"
+    fi
 
-# Register our line-init
-zle -N zle-line-init z-skk-line-init
+    # Register our line-init
+    zle -N zle-line-init z-skk-line-init
+fi
