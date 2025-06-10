@@ -46,50 +46,15 @@ z-skk-self-insert() {
         return
     fi
 
-    # Handle hiragana mode
-    if [[ $Z_SKK_MODE == "hiragana" ]]; then
-        # Special key handling in hiragana mode
-        case "$KEYS" in
-            l|L)
-                # 'l' or 'L' switches to ASCII mode
-                z-skk-ascii-mode
-                zle -R
-                return
-                ;;
-            q)
-                # 'q' switches to katakana mode (future)
-                # For now, just insert 'q'
-                ;;
-        esac
-
-        # Add key to romaji buffer
-        Z_SKK_ROMAJI_BUFFER+="$KEYS"
-
-        # Try to convert
-        z-skk-convert-romaji
-
-        # If we got a conversion, insert it
-        if [[ -n "$Z_SKK_CONVERTED" ]]; then
-            LBUFFER+="$Z_SKK_CONVERTED"
-        fi
-
-        # Redraw the line to show the update
-        zle -R
-
-        return
-    fi
-
-    # Default: pass through
-    zle .self-insert
+    # Delegate to input handler
+    z-skk-handle-input "$KEYS"
 }
 
-# Register ZLE widgets (only in interactive shells or when zle is available)
-if [[ -o interactive ]] || (( ${+zle} )); then
-    zle -N z-skk-self-insert
-    zle -N z-skk-toggle-kana
-    zle -N z-skk-ascii-mode
-    zle -N z-skk-hiragana-mode
-fi
+# Register ZLE widgets
+zle -N z-skk-self-insert
+zle -N z-skk-toggle-kana
+zle -N z-skk-ascii-mode
+zle -N z-skk-hiragana-mode
 
 # Setup keybindings
 z-skk-setup-keybindings() {

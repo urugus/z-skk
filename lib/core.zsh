@@ -7,6 +7,7 @@ typeset -g Z_SKK_CONVERTING=0          # Conversion state flag
 typeset -g Z_SKK_BUFFER=""             # Input buffer
 typeset -g -a Z_SKK_CANDIDATES=()      # Conversion candidates
 typeset -g Z_SKK_CANDIDATE_INDEX=0     # Current candidate index
+typeset -g Z_SKK_PASS_THROUGH=0        # Pass through flag for input handling
 
 # Mode definitions
 typeset -gA Z_SKK_MODES=(
@@ -38,25 +39,43 @@ z-skk-init() {
     # Load modules
     local lib_dir="${Z_SKK_DIR}/lib"
 
-    # Load conversion module
-    if [[ -f "$lib_dir/conversion.zsh" ]]; then
-        source "$lib_dir/conversion.zsh"
+    # Load error handling first
+    if [[ -f "$lib_dir/error.zsh" ]]; then
+        source "$lib_dir/error.zsh" || {
+            print "z-skk: Failed to load error handling" >&2
+            return 1
+        }
     fi
+
+    # Load conversion module
+    z-skk-safe-source "$lib_dir/conversion.zsh" || {
+        _z-skk-log-error "error" "Failed to load conversion module"
+        return 1
+    }
 
     # Load modes module
-    if [[ -f "$lib_dir/modes.zsh" ]]; then
-        source "$lib_dir/modes.zsh"
-    fi
+    z-skk-safe-source "$lib_dir/modes.zsh" || {
+        _z-skk-log-error "error" "Failed to load modes module"
+        return 1
+    }
 
     # Load display module
-    if [[ -f "$lib_dir/display.zsh" ]]; then
-        source "$lib_dir/display.zsh"
-    fi
+    z-skk-safe-source "$lib_dir/display.zsh" || {
+        _z-skk-log-error "warn" "Failed to load display module"
+        # Continue without display
+    }
+
+    # Load input module
+    z-skk-safe-source "$lib_dir/input.zsh" || {
+        _z-skk-log-error "error" "Failed to load input module"
+        return 1
+    }
 
     # Load keybindings module
-    if [[ -f "$lib_dir/keybindings.zsh" ]]; then
-        source "$lib_dir/keybindings.zsh"
-    fi
+    z-skk-safe-source "$lib_dir/keybindings.zsh" || {
+        _z-skk-log-error "error" "Failed to load keybindings module"
+        return 1
+    }
 
     # Setup display
     if (( ${+functions[z-skk-display-setup]} )); then
