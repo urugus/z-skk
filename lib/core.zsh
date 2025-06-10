@@ -65,6 +65,12 @@ z-skk-init() {
         return 1
     }
 
+    # Load dictionary I/O
+    z-skk-safe-source "$lib_dir/dictionary-io.zsh" || {
+        _z-skk-log-error "warn" "Failed to load dictionary I/O module"
+        # Continue without file I/O support
+    }
+
     # Load modes module
     z-skk-safe-source "$lib_dir/modes.zsh" || {
         _z-skk-log-error "error" "Failed to load modes module"
@@ -92,6 +98,11 @@ z-skk-init() {
     # Initialize dictionary
     if (( ${+functions[z-skk-init-dictionary]} )); then
         z-skk-init-dictionary
+    fi
+
+    # Initialize dictionary loading
+    if (( ${+functions[z-skk-init-dictionary-loading]} )); then
+        z-skk-init-dictionary-loading
     fi
 
     # Setup display
