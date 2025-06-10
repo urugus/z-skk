@@ -64,3 +64,69 @@ z-skk-display-cleanup() {
     RPROMPT="$Z_SKK_ORIGINAL_RPROMPT"
 }
 
+# ============================================
+# Buffer manipulation utilities
+# ============================================
+
+# Clear marker and content from buffer
+z-skk-clear-marker() {
+    local marker="$1"
+    local content="$2"
+
+    # Clear from both LBUFFER and RBUFFER
+    if [[ -n "$marker" ]]; then
+        # Try different patterns to ensure clean removal
+        LBUFFER="${LBUFFER%${marker}*}"
+        RBUFFER="${RBUFFER#*${content}}"
+        RBUFFER="${RBUFFER#*]}"  # For registration mode
+    fi
+}
+
+# Add marker and content to buffer
+z-skk-add-marker() {
+    local marker="$1"
+    local content="$2"
+
+    # Add to LBUFFER
+    LBUFFER+="${marker}${content}"
+}
+
+# Update marker display (clear old, add new)
+z-skk-update-marker() {
+    local old_marker="$1"
+    local old_content="$2"
+    local new_marker="$3"
+    local new_content="$4"
+
+    # Clear old display
+    z-skk-clear-marker "$old_marker" "$old_content"
+
+    # Add new display
+    z-skk-add-marker "$new_marker" "$new_content"
+}
+
+# Safe ZLE redraw with error handling
+z-skk-safe-redraw() {
+    zle -R || {
+        if (( ${+functions[_z-skk-log-error]} )); then
+            _z-skk-log-error "warn" "Failed to redraw line"
+        fi
+        return 1
+    }
+    return 0
+}
+
+# Batch display update helper
+typeset -g Z_SKK_DISPLAY_DIRTY=0
+
+z-skk-mark-display-dirty() {
+    Z_SKK_DISPLAY_DIRTY=1
+}
+
+z-skk-flush-display() {
+    if [[ $Z_SKK_DISPLAY_DIRTY -eq 1 ]]; then
+        z-skk-safe-redraw
+        Z_SKK_DISPLAY_DIRTY=0
+    fi
+}
+

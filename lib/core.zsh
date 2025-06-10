@@ -47,6 +47,12 @@ z-skk-init() {
         }
     fi
 
+    # Load utilities
+    z-skk-safe-source "$lib_dir/utils.zsh" || {
+        _z-skk-log-error "error" "Failed to load utilities"
+        return 1
+    }
+
     # Load conversion module
     z-skk-safe-source "$lib_dir/conversion.zsh" || {
         _z-skk-log-error "error" "Failed to load conversion module"

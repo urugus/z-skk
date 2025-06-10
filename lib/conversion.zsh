@@ -169,23 +169,6 @@ z-skk-process-romaji-input() {
     fi
 }
 
-# Clear marker display from buffer
-_z-skk-clear-marker-display() {
-    local marker="$1"
-    local content="$2"
-    local old_display="${marker}${content}"
-    LBUFFER="${LBUFFER%$old_display}"
-    RBUFFER="${RBUFFER#$old_display}"
-}
-
-# Add marker display to buffer
-_z-skk-add-marker-display() {
-    local marker="$1"
-    local content="$2"
-    local display_text="${marker}${content}"
-    RBUFFER="${display_text}${RBUFFER}"
-    LBUFFER="${LBUFFER%$display_text}"
-}
 
 # Update conversion display with marker
 z-skk-update-conversion-display() {
@@ -201,8 +184,47 @@ z-skk-update-conversion-display() {
         fi
 
         # Update the display
-        _z-skk-add-marker-display "▽" "$display_text"
+        z-skk-add-marker "▽" "$display_text"
     fi
+}
+
+# Look up candidates for a reading
+_z-skk-lookup-candidates() {
+    local reading="$1"
+    local entry
+
+    if entry=$(z-skk-lookup "$reading"); then
+        # Split candidates
+        local -a candidates=()
+        candidates=("${(@f)$(z-skk-split-candidates "$entry")}")
+
+        if [[ ${#candidates[@]} -gt 0 ]]; then
+            print -r -- "${candidates[@]}"
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
+# Prepare candidates for selection (remove annotations)
+_z-skk-prepare-candidates() {
+    local -a raw_candidates=("$@")
+    local -a clean_candidates=()
+    local candidate
+
+    for candidate in "${raw_candidates[@]}"; do
+        clean_candidates+=($(z-skk-get-candidate-word "$candidate"))
+    done
+
+    print -r -- "${clean_candidates[@]}"
+}
+
+# Switch to candidate selection mode
+_z-skk-switch-to-selection-mode() {
+    Z_SKK_CANDIDATE_INDEX=0
+    Z_SKK_CONVERTING=2  # 2 means selecting candidates
+    z-skk-update-candidate-display
 }
 
 # Start actual conversion (Space key pressed)
@@ -213,36 +235,19 @@ z-skk-start-conversion() {
 
     # Error recovery wrapper
     {
+        # Look up candidates
+        local -a raw_candidates=()
+        if raw_candidates=($(_z-skk-lookup-candidates "$Z_SKK_BUFFER")); then
+            # Prepare candidates for selection
+            Z_SKK_CANDIDATES=($(_z-skk-prepare-candidates "${raw_candidates[@]}"))
 
-    # Look up the word in dictionary
-    local entry
-    if entry=$(z-skk-lookup "$Z_SKK_BUFFER"); then
-        # Split candidates
-        local -a candidates=()
-        candidates=("${(@f)$(z-skk-split-candidates "$entry")}")
-
-        if [[ ${#candidates[@]} -gt 0 ]]; then
-            # Store candidates (without annotations for now)
-            Z_SKK_CANDIDATES=()
-            local candidate
-            for candidate in "${candidates[@]}"; do
-                Z_SKK_CANDIDATES+=($(z-skk-get-candidate-word "$candidate"))
-            done
-
-            # Set first candidate
-            Z_SKK_CANDIDATE_INDEX=0
-
-            # Change to candidate selection mode
-            Z_SKK_CONVERTING=2  # 2 means selecting candidates
-
-            # Update display
-            z-skk-update-candidate-display
+            # Switch to selection mode
+            _z-skk-switch-to-selection-mode
             return 0
         fi
-    fi
 
-    # No candidates found - start registration mode
-    z-skk-start-registration "$Z_SKK_BUFFER"
+        # No candidates found - start registration mode
+        z-skk-start-registration "$Z_SKK_BUFFER"
 
     } always {
         # Error recovery
@@ -258,7 +263,7 @@ z-skk-update-candidate-display() {
     if [[ $Z_SKK_CONVERTING -eq 2 && ${#Z_SKK_CANDIDATES[@]} -gt 0 ]]; then
         # Show ▼ marker with current candidate
         local current_candidate="${Z_SKK_CANDIDATES[$((Z_SKK_CANDIDATE_INDEX + 1))]}"
-        _z-skk-add-marker-display "▼" "$current_candidate"
+        z-skk-add-marker "▼" "$current_candidate"
     fi
 }
 
@@ -269,7 +274,7 @@ _z-skk-navigate-candidate() {
     if [[ $Z_SKK_CONVERTING -eq 2 && ${#Z_SKK_CANDIDATES[@]} -gt 0 ]]; then
         # Clear current display
         local current_candidate="${Z_SKK_CANDIDATES[$((Z_SKK_CANDIDATE_INDEX + 1))]}"
-        _z-skk-clear-marker-display "▼" "$current_candidate"
+        z-skk-clear-marker "▼" "$current_candidate"
 
         # Move index based on direction
         if [[ "$direction" == "next" ]]; then
@@ -302,7 +307,7 @@ z-skk-confirm-candidate() {
     if [[ $Z_SKK_CONVERTING -eq 2 && ${#Z_SKK_CANDIDATES[@]} -gt 0 ]]; then
         # Clear display
         local current_candidate="${Z_SKK_CANDIDATES[$((Z_SKK_CANDIDATE_INDEX + 1))]}"
-        _z-skk-clear-marker-display "▼" "$current_candidate"
+        z-skk-clear-marker "▼" "$current_candidate"
 
         # Insert the selected candidate
         LBUFFER+="$current_candidate"
@@ -321,12 +326,12 @@ z-skk-cancel-conversion() {
         # Clear any display
         if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
             local display_content="${Z_SKK_BUFFER}${Z_SKK_ROMAJI_BUFFER}"
-            _z-skk-clear-marker-display "▽" "$display_content"
+            z-skk-clear-marker "▽" "$display_content"
             # Insert the buffer content as-is
             LBUFFER+="$Z_SKK_BUFFER"
         elif [[ $Z_SKK_CONVERTING -eq 2 ]]; then
             local current_candidate="${Z_SKK_CANDIDATES[$((Z_SKK_CANDIDATE_INDEX + 1))]}"
-            _z-skk-clear-marker-display "▼" "$current_candidate"
+            z-skk-clear-marker "▼" "$current_candidate"
             # Insert the original buffer content
             LBUFFER+="$Z_SKK_BUFFER"
         fi

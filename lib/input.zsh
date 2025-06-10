@@ -65,11 +65,7 @@ _z-skk-handle-hiragana-input() {
     fi
 
     # Redraw the line
-    zle -R || {
-        if (( ${+functions[_z-skk-log-error]} )); then
-            _z-skk-log-error "warn" "Failed to redraw line"
-        fi
-    }
+    z-skk-safe-redraw
 }
 
 # Handle keys during candidate selection
@@ -190,7 +186,7 @@ z-skk-handle-input() {
     # Check if in registration mode first
     if z-skk-is-registering; then
         z-skk-registration-input "$key"
-        zle -R
+        z-skk-safe-redraw
         return
     fi
 

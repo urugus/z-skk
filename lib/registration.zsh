@@ -20,11 +20,10 @@ z-skk-start-registration() {
     Z_SKK_REGISTER_CANDIDATE=""
 
     # Clear any existing display
-    LBUFFER="${LBUFFER%▽*}"
-    RBUFFER=""
+    z-skk-clear-marker "▽" ""
 
     # Show registration marker with closing bracket
-    LBUFFER+="▼${reading}[]"
+    z-skk-add-marker "▼" "${reading}[]"
 
     return 0
 }
@@ -67,14 +66,11 @@ z-skk-registration-input() {
 z-skk-update-registration-display() {
     if [[ $Z_SKK_REGISTERING -eq 1 ]]; then
         # Build current display string
-        local current_display="${Z_SKK_REGISTER_READING}[${Z_SKK_REGISTER_CANDIDATE}"
+        local current_display="${Z_SKK_REGISTER_READING}[${Z_SKK_REGISTER_CANDIDATE}]"
 
-        # Clear entire line buffer to avoid confusion
-        LBUFFER="${LBUFFER%▼*}"
-        RBUFFER="${RBUFFER#*]}"
-
-        # Show updated display with closing bracket
-        LBUFFER+="▼${current_display}]"
+        # Update display using common utilities
+        z-skk-clear-marker "▼" ""
+        z-skk-add-marker "▼" "$current_display"
     fi
 }
 
@@ -86,7 +82,7 @@ z-skk-confirm-registration() {
     fi
 
     # Clear display
-    LBUFFER="${LBUFFER%▼*}"
+    z-skk-clear-marker "▼" ""
 
     # Add to dictionary
     z-skk-add-user-entry "$Z_SKK_REGISTER_READING" "$Z_SKK_REGISTER_CANDIDATE"
@@ -112,7 +108,7 @@ z-skk-confirm-registration() {
 z-skk-cancel-registration() {
     if [[ $Z_SKK_REGISTERING -eq 1 ]]; then
         # Clear display
-        LBUFFER="${LBUFFER%▼*}"
+        z-skk-clear-marker "▼" ""
 
         # Insert the original reading as-is
         LBUFFER+="$Z_SKK_REGISTER_READING"
