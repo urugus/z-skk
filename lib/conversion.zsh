@@ -132,3 +132,42 @@ z-skk-convert-romaji() {
     Z_SKK_CONVERTED="${Z_SKK_ROMAJI_BUFFER:0:1}"
     Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER:1}"
 }
+
+# Update conversion display with marker
+z-skk-update-conversion-display() {
+    local display_text=""
+
+    if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
+        # Show ▽ marker with conversion buffer
+        display_text="▽${Z_SKK_BUFFER}"
+
+        # Add any remaining romaji buffer
+        if [[ -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
+            display_text+="$Z_SKK_ROMAJI_BUFFER"
+        fi
+
+        # Update the display
+        RBUFFER="$display_text$RBUFFER"
+        LBUFFER="${LBUFFER%$display_text}"
+    fi
+}
+
+# Start actual conversion (Space key pressed)
+z-skk-start-conversion() {
+    # For now, just cancel since we don't have dictionary yet
+    z-skk-cancel-conversion
+}
+
+# Cancel conversion and output as-is
+z-skk-cancel-conversion() {
+    if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
+        # Insert the buffer content as-is
+        LBUFFER+="$Z_SKK_BUFFER"
+
+        # Reset conversion state
+        Z_SKK_CONVERTING=0
+        Z_SKK_BUFFER=""
+        Z_SKK_CANDIDATES=()
+        Z_SKK_CANDIDATE_INDEX=0
+    fi
+}

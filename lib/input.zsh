@@ -11,6 +11,13 @@ _z-skk-handle-ascii-input() {
 _z-skk-handle-hiragana-input() {
     local key="$1"
 
+    # Check if already in conversion mode
+    if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
+        # Handle input during conversion
+        _z-skk-handle-converting-input "$key"
+        return
+    fi
+
     # Special key handling
     case "$key" in
         l|L)
@@ -25,6 +32,15 @@ _z-skk-handle-hiragana-input() {
             ;;
     esac
 
+    # Check for uppercase (conversion start)
+    if [[ "$key" =~ ^[A-Z]$ ]]; then
+        # Start conversion mode
+        Z_SKK_CONVERTING=1
+        Z_SKK_BUFFER=""
+        # Convert uppercase to lowercase for romaji processing
+        key="${key:l}"
+    fi
+
     # Add key to romaji buffer
     Z_SKK_ROMAJI_BUFFER+="$key"
 
@@ -32,8 +48,18 @@ _z-skk-handle-hiragana-input() {
     if z-skk-convert-romaji; then
         # If we got a conversion, insert it
         if [[ -n "$Z_SKK_CONVERTED" ]]; then
-            LBUFFER+="$Z_SKK_CONVERTED"
+            if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
+                # Add to conversion buffer instead of direct insert
+                Z_SKK_BUFFER+="$Z_SKK_CONVERTED"
+            else
+                LBUFFER+="$Z_SKK_CONVERTED"
+            fi
         fi
+    fi
+
+    # Update display with marker if converting
+    if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
+        z-skk-update-conversion-display
     fi
 
     # Redraw the line
@@ -42,6 +68,43 @@ _z-skk-handle-hiragana-input() {
             _z-skk-log-error "warn" "Failed to redraw line"
         fi
     }
+}
+
+# Handle input during conversion mode
+_z-skk-handle-converting-input() {
+    local key="$1"
+
+    case "$key" in
+        " ")
+            # Space - start conversion
+            z-skk-start-conversion
+            return
+            ;;
+        $'\x07')  # C-g
+            # Cancel conversion
+            z-skk-cancel-conversion
+            return
+            ;;
+        $'\r')    # Enter
+            # Confirm conversion (for now, just cancel)
+            z-skk-cancel-conversion
+            return
+            ;;
+    esac
+
+    # Continue adding to buffer
+    local lower_key="${key:l}"
+    Z_SKK_ROMAJI_BUFFER+="$lower_key"
+
+    # Try to convert
+    if z-skk-convert-romaji; then
+        if [[ -n "$Z_SKK_CONVERTED" ]]; then
+            Z_SKK_BUFFER+="$Z_SKK_CONVERTED"
+        fi
+    fi
+
+    # Update display
+    z-skk-update-conversion-display
 }
 
 # Handle input in katakana mode
