@@ -91,8 +91,8 @@ zle -N z-skk-hiragana-mode
 
 # Setup keybindings
 z-skk-setup-keybindings() {
-    # Only bind if in interactive shell
-    [[ -o interactive ]] || return 0
+    # Skip if already setup
+    [[ -n "${Z_SKK_KEYBINDINGS_SETUP:-}" ]] && return 0
 
     # Save original self-insert widget if not already saved
     if ! (( ${+widgets[.self-insert]} )); then
@@ -109,7 +109,33 @@ z-skk-setup-keybindings() {
     # Mode switching keys
     bindkey "^J" z-skk-toggle-kana    # Toggle hiragana/ascii
     bindkey "^L" z-skk-ascii-mode     # Force ASCII mode
+    
+    # Mark as setup
+    typeset -g Z_SKK_KEYBINDINGS_SETUP=1
 }
 
-# Initialize keybindings when sourced
-z-skk-setup-keybindings
+# Initialize keybindings
+# For interactive shells, setup immediately
+if [[ -o interactive ]]; then
+    z-skk-setup-keybindings
+fi
+
+# For non-interactive shells (like when loaded by zinit),
+# setup keybindings on first line edit
+z-skk-line-init() {
+    # Setup keybindings if not already done
+    z-skk-setup-keybindings
+    
+    # Call original zle-line-init if it exists
+    if (( ${+functions[_z_skk_orig_line_init]} )); then
+        _z_skk_orig_line_init "$@"
+    fi
+}
+
+# Save original zle-line-init if it exists
+if (( ${+functions[zle-line-init]} )); then
+    functions[_z_skk_orig_line_init]="${functions[zle-line-init]}"
+fi
+
+# Register our line-init
+zle -N zle-line-init z-skk-line-init
