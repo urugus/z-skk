@@ -55,6 +55,11 @@ z-skk-full-reset() {
         fi
     fi
 
+    # Reset okurigana state if available
+    if (( ${+functions[z-skk-reset-okurigana]} )); then
+        z-skk-reset-okurigana
+    fi
+
     # Clear display
     z-skk-clear-marker "▽" ""
     z-skk-clear-marker "▼" ""

@@ -52,6 +52,7 @@ _z-skk-handle-hiragana-input() {
         # Start conversion mode
         Z_SKK_CONVERTING=1
         Z_SKK_BUFFER=""
+        Z_SKK_LAST_INPUT="$key"  # Store uppercase letter
         # Convert uppercase to lowercase for romaji processing
         processed_key="${key:l}"
     fi
@@ -143,9 +144,30 @@ _z-skk-handle-converting-input() {
             return
         fi
 
+        # Check for okurigana start (uppercase followed by lowercase)
+        if [[ "$key" =~ ^[a-z]$ && -n "$Z_SKK_BUFFER" ]]; then
+            # Check if we should start okurigana mode
+            local last_input="${Z_SKK_LAST_INPUT:-}"
+            if [[ "$last_input" =~ ^[A-Z]$ ]]; then
+                # Start okurigana mode
+                z-skk-start-okurigana
+                z-skk-process-okurigana "$key"
+                Z_SKK_LAST_INPUT="$key"
+                z-skk-update-conversion-display
+                return
+            fi
+        fi
+
         # Continue adding to buffer
         local lower_key="${key:l}"
-        z-skk-process-romaji-input "$lower_key"
+        if z-skk-is-okurigana-mode; then
+            z-skk-process-okurigana "$lower_key"
+        else
+            z-skk-process-romaji-input "$lower_key"
+        fi
+
+        # Store last input
+        Z_SKK_LAST_INPUT="$key"
 
         # Update display
         z-skk-update-conversion-display

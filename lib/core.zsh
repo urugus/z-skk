@@ -8,6 +8,7 @@ typeset -g Z_SKK_BUFFER=""             # Input buffer
 typeset -g -a Z_SKK_CANDIDATES=()      # Conversion candidates
 typeset -g Z_SKK_CANDIDATE_INDEX=0     # Current candidate index
 typeset -g Z_SKK_PASS_THROUGH=0        # Pass through flag for input handling
+typeset -g Z_SKK_LAST_INPUT=""          # Last input character for okurigana detection
 
 # Mode definitions
 typeset -gA Z_SKK_MODES=(
@@ -81,6 +82,12 @@ z-skk-init() {
     z-skk-safe-source "$lib_dir/registration.zsh" || {
         _z-skk-log-error "warn" "Failed to load registration module"
         # Continue without registration support
+    }
+
+    # Load okurigana module
+    z-skk-safe-source "$lib_dir/okurigana.zsh" || {
+        _z-skk-log-error "warn" "Failed to load okurigana module"
+        # Continue without okurigana support
     }
 
     # Load modes module

@@ -175,12 +175,21 @@ z-skk-update-conversion-display() {
     local display_text=""
 
     if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
-        # Show ▽ marker with conversion buffer
-        display_text="${Z_SKK_BUFFER}"
-
-        # Add any remaining romaji buffer
-        if [[ -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
-            display_text+="$Z_SKK_ROMAJI_BUFFER"
+        # Handle okurigana mode display
+        if z-skk-is-okurigana-mode; then
+            # Show full buffer with asterisk at okurigana position
+            local prefix_len=${#Z_SKK_OKURIGANA_PREFIX}
+            display_text="${Z_SKK_BUFFER:0:$prefix_len}*${Z_SKK_BUFFER:$prefix_len}"
+            if [[ -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
+                display_text+="${Z_SKK_ROMAJI_BUFFER}"
+            fi
+        else
+            # Normal conversion display
+            display_text="${Z_SKK_BUFFER}"
+            # Add any remaining romaji buffer
+            if [[ -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
+                display_text+="$Z_SKK_ROMAJI_BUFFER"
+            fi
         fi
 
         # Update the display
@@ -193,6 +202,17 @@ _z-skk-lookup-candidates() {
     local reading="$1"
     local entry
 
+    # Check if we have okurigana
+    if [[ -n "$Z_SKK_OKURIGANA_SUFFIX" ]]; then
+        # Try lookup with okurigana first
+        if entry=$(z-skk-lookup-with-okurigana "$reading" "$Z_SKK_OKURIGANA_SUFFIX"); then
+            # Use the filtered candidates
+            echo "$entry"
+            return 0
+        fi
+    fi
+
+    # Normal lookup
     if entry=$(z-skk-lookup "$reading"); then
         # Split candidates
         local -a candidates=()
@@ -233,10 +253,17 @@ z-skk-start-conversion() {
         return 1
     fi
 
+    # Complete okurigana if in okurigana mode
+    if z-skk-is-okurigana-mode; then
+        z-skk-complete-okurigana
+    fi
+
     # Error recovery wrapper
     {
         # Look up candidates
         local -a raw_candidates=()
+        # Clear display before lookup
+        z-skk-clear-marker "▽" ""
         if raw_candidates=($(_z-skk-lookup-candidates "$Z_SKK_BUFFER")); then
             # Prepare candidates for selection
             Z_SKK_CANDIDATES=($(_z-skk-prepare-candidates "${raw_candidates[@]}"))
@@ -317,6 +344,7 @@ z-skk-confirm-candidate() {
         Z_SKK_BUFFER=""
         Z_SKK_CANDIDATES=()
         Z_SKK_CANDIDATE_INDEX=0
+        Z_SKK_OKURIGANA_SUFFIX=""
     fi
 }
 

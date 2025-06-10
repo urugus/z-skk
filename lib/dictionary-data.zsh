@@ -51,6 +51,24 @@ typeset -gA Z_SKK_DICTIONARY=(
     [よる]="夜:night"
     [りんご]="林檎:apple"
     [わたし]="私:I/渡し:ferry"
+
+    # Okurigana entries
+    [おく*り]="送り:send"
+    [おく*る]="送る:to send"
+    [か*く]="書く:to write/描く:to draw"
+    [か*いた]="書いた:wrote/描いた:drew"
+    [よ*む]="読む:to read"
+    [よ*んだ]="読んだ:read (past)"
+    [はし*る]="走る:to run"
+    [はし*った]="走った:ran"
+    [た*べる]="食べる:to eat"
+    [た*べた]="食べた:ate"
+    [み*る]="見る:to see/診る:to examine"
+    [み*た]="見た:saw/診た:examined"
+    [つか*う]="使う:to use"
+    [つか*った]="使った:used"
+    [おも*う]="思う:to think"
+    [おも*った]="思った:thought"
 )
 
 # Dictionary index for first character lookup (performance optimization)

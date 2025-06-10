@@ -1,0 +1,152 @@
+#!/usr/bin/env zsh
+# Test okurigana processing
+
+# Test framework setup
+typeset -g TEST_DIR="${0:A:h}"
+typeset -g PROJECT_DIR="${TEST_DIR:h}"
+
+# Source test utilities
+source "$TEST_DIR/test_utils.zsh"
+
+# Load the plugin
+source "$PROJECT_DIR/z-skk.plugin.zsh"
+
+# Test okurigana mode detection
+test_okurigana_detection() {
+    # Test uppercase followed by lowercase detection
+    assert "Should detect okurigana" 'z-skk-check-okurigana-start "K" "a"'
+    assert "Should detect okurigana" 'z-skk-check-okurigana-start "O" "k"'
+    assert "Should not detect okurigana" '! z-skk-check-okurigana-start "k" "a"'
+    assert "Should not detect okurigana" '! z-skk-check-okurigana-start "K" "A"'
+}
+
+# Test okurigana mode initialization
+test_okurigana_mode_init() {
+    # Reset state
+    z-skk-reset-state
+    Z_SKK_MODE="hiragana"
+    Z_SKK_BUFFER="おく"
+
+    # Start okurigana mode
+    z-skk-start-okurigana
+
+    assert_equals "Okurigana mode active" "1" "$Z_SKK_OKURIGANA_MODE"
+    assert_equals "Prefix stored" "おく" "$Z_SKK_OKURIGANA_PREFIX"
+    assert_equals "Buffer kept for okurigana" "おく" "$Z_SKK_BUFFER"
+}
+
+# Test okurigana key building
+test_okurigana_key_building() {
+    # Test key with okurigana
+    local key=$(z-skk-build-okurigana-key "おく" "り")
+    assert_equals "Built key with okurigana" "おく*り" "$key"
+
+    # Test key without okurigana
+    key=$(z-skk-build-okurigana-key "かんじ" "")
+    assert_equals "Built key without okurigana" "かんじ" "$key"
+}
+
+# Test okurigana lookup
+test_okurigana_lookup() {
+    # Test direct okurigana lookup
+    local result=$(z-skk-lookup-with-okurigana "おく" "り")
+    assert_equals "Found okurigana entry" "送り:send" "$result"
+
+    # Test okurigana filtering fallback
+    result=$(z-skk-lookup-with-okurigana "おく" "る")
+    assert_equals "Found okurigana entry る" "送る:to send" "$result"
+}
+
+# Test okurigana input processing
+test_okurigana_input_processing() {
+    # Reset state
+    z-skk-reset-state
+    Z_SKK_MODE="hiragana"
+    Z_SKK_CONVERTING=1
+    LBUFFER=""
+
+    # Simulate "OkuRi" input
+    # O -> start conversion
+    _z-skk-handle-hiragana-input "O"
+    assert_equals "Buffer has お" "お" "$Z_SKK_BUFFER"
+
+    # k -> continue
+    _z-skk-handle-hiragana-input "k"
+
+    # u -> complete "ku"
+    _z-skk-handle-hiragana-input "u"
+    assert_equals "Buffer has おく" "おく" "$Z_SKK_BUFFER"
+
+    # R -> should trigger okurigana mode on next lowercase
+    Z_SKK_LAST_INPUT="R"
+    _z-skk-handle-converting-input "R"
+
+    # i -> start okurigana
+    _z-skk-handle-converting-input "i"
+    assert_equals "Okurigana mode active" "1" "$Z_SKK_OKURIGANA_MODE"
+    assert_equals "Okurigana suffix" "り" "$Z_SKK_OKURIGANA_SUFFIX"
+}
+
+# Test okurigana conversion
+test_okurigana_conversion() {
+    # Reset and set up okurigana state
+    z-skk-reset-state
+    Z_SKK_MODE="hiragana"
+    Z_SKK_CONVERTING=1
+    Z_SKK_BUFFER="おくり"  # Full buffer with okurigana
+    Z_SKK_OKURIGANA_MODE=1
+    Z_SKK_OKURIGANA_PREFIX="おく"
+    Z_SKK_OKURIGANA_SUFFIX=""  # Will be set by complete_okurigana
+    LBUFFER=""
+
+    # Start conversion
+    z-skk-start-conversion
+
+    assert_equals "Conversion successful" "2" "$Z_SKK_CONVERTING"
+    assert "Has candidates" '[[ ${#Z_SKK_CANDIDATES[@]} -gt 0 ]]'
+    assert_equals "First candidate" "送り" "${Z_SKK_CANDIDATES[1]}"
+}
+
+# Test okurigana display
+test_okurigana_display() {
+    # Reset state
+    z-skk-reset-state
+    Z_SKK_MODE="hiragana"
+    Z_SKK_CONVERTING=1
+    Z_SKK_OKURIGANA_MODE=1
+    Z_SKK_OKURIGANA_PREFIX="おく"
+    Z_SKK_BUFFER="おくり"
+    LBUFFER=""
+
+    # Update display
+    z-skk-update-conversion-display
+
+    assert "Display has marker and asterisk" '[[ "$LBUFFER" == "▽おく*り" ]]'
+}
+
+# Test okurigana reset
+test_okurigana_reset() {
+    # Set okurigana state
+    Z_SKK_OKURIGANA_MODE=1
+    Z_SKK_OKURIGANA_PREFIX="test"
+    Z_SKK_OKURIGANA_SUFFIX="suffix"
+
+    # Reset
+    z-skk-reset-okurigana
+
+    assert_equals "Mode reset" "0" "$Z_SKK_OKURIGANA_MODE"
+    assert_equals "Prefix cleared" "" "$Z_SKK_OKURIGANA_PREFIX"
+    assert_equals "Suffix cleared" "" "$Z_SKK_OKURIGANA_SUFFIX"
+}
+
+# Run tests
+test_okurigana_detection
+test_okurigana_mode_init
+test_okurigana_key_building
+test_okurigana_lookup
+test_okurigana_input_processing
+test_okurigana_conversion
+test_okurigana_display
+test_okurigana_reset
+
+print_test_summary
