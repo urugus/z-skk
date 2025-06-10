@@ -53,7 +53,13 @@ z-skk-init() {
         return 1
     }
 
-    # Load dictionary module
+    # Load dictionary data first
+    z-skk-safe-source "$lib_dir/dictionary-data.zsh" || {
+        _z-skk-log-error "error" "Failed to load dictionary data"
+        return 1
+    }
+
+    # Load dictionary operations
     z-skk-safe-source "$lib_dir/dictionary.zsh" || {
         _z-skk-log-error "error" "Failed to load dictionary module"
         return 1

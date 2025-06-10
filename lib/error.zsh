@@ -71,6 +71,35 @@ z-skk-safe-zle() {
     return 0
 }
 
+# Execute with error handling
+z-skk-with-error-handling() {
+    local operation="$1"
+    shift
+    local args=("$@")
+
+    # Try the operation
+    if ! "$operation" "${args[@]}" 2>&1; then
+        _z-skk-log-error "error" "Operation failed: $operation"
+        return 1
+    fi
+
+    return 0
+}
+
+# Validate input parameters
+z-skk-validate-params() {
+    local param_count=$1
+    local actual_count=$2
+    local function_name=$3
+
+    if [[ $actual_count -lt $param_count ]]; then
+        _z-skk-log-error "error" "$function_name: Expected at least $param_count parameters, got $actual_count"
+        return 1
+    fi
+
+    return 0
+}
+
 # Reset to safe state on error
 z-skk-error-reset() {
     local context="${1:-unknown}"
@@ -78,7 +107,9 @@ z-skk-error-reset() {
     _z-skk-log-error "warn" "Resetting due to error in: $context"
 
     # Reset all state
-    z-skk-reset-state
+    if (( ${+functions[z-skk-reset-state]} )); then
+        z-skk-reset-state
+    fi
 
     # Switch to ASCII mode (safest)
     Z_SKK_MODE="ascii"

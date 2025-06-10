@@ -29,26 +29,6 @@ _z-skk-handle-hiragana-special-key() {
 }
 
 
-# Process romaji input and update buffer
-_z-skk-process-romaji-input() {
-    local key="$1"
-
-    # Add key to romaji buffer
-    Z_SKK_ROMAJI_BUFFER+="$key"
-
-    # Try to convert
-    if z-skk-convert-romaji; then
-        # If we got a conversion, insert it
-        if [[ -n "$Z_SKK_CONVERTED" ]]; then
-            if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
-                # Add to conversion buffer instead of direct insert
-                Z_SKK_BUFFER+="$Z_SKK_CONVERTED"
-            else
-                LBUFFER+="$Z_SKK_CONVERTED"
-            fi
-        fi
-    fi
-}
 
 # Handle input in hiragana mode
 _z-skk-handle-hiragana-input() {
@@ -77,7 +57,7 @@ _z-skk-handle-hiragana-input() {
     fi
 
     # Process romaji input
-    _z-skk-process-romaji-input "$processed_key"
+    z-skk-process-romaji-input "$processed_key"
 
     # Update display with marker if converting
     if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
@@ -169,7 +149,7 @@ _z-skk-handle-converting-input() {
 
         # Continue adding to buffer
         local lower_key="${key:l}"
-        _z-skk-process-romaji-input "$lower_key"
+        z-skk-process-romaji-input "$lower_key"
 
         # Update display
         z-skk-update-conversion-display

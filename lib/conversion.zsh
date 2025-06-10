@@ -75,19 +75,34 @@ typeset -gA Z_SKK_ROMAJI_TO_HIRAGANA=(
 # Result of conversion
 typeset -g Z_SKK_CONVERTED=""
 
+# Romaji prefix cache for performance
+typeset -gA Z_SKK_ROMAJI_PREFIX_CACHE=()
+
+# Build romaji prefix cache
+_z-skk-build-romaji-prefix-cache() {
+    local key prefix
+    Z_SKK_ROMAJI_PREFIX_CACHE=()
+
+    # Build cache of all possible prefixes
+    for key in ${(k)Z_SKK_ROMAJI_TO_HIRAGANA}; do
+        for (( i=1; i<=${#key}; i++ )); do
+            prefix="${key:0:$i}"
+            Z_SKK_ROMAJI_PREFIX_CACHE[$prefix]=1
+        done
+    done
+}
+
 # Check if a string could be the start of a valid romaji sequence
 z-skk-is-partial-romaji() {
     local input="$1"
-    local key
 
-    # Check if any key in the table starts with this input
-    for key in ${(k)Z_SKK_ROMAJI_TO_HIRAGANA}; do
-        if [[ "$key" == "$input"* ]]; then
-            return 0
-        fi
-    done
+    # Build cache on first use
+    if [[ ${#Z_SKK_ROMAJI_PREFIX_CACHE} -eq 0 ]]; then
+        _z-skk-build-romaji-prefix-cache
+    fi
 
-    return 1
+    # Fast lookup using cache
+    [[ -n "${Z_SKK_ROMAJI_PREFIX_CACHE[$input]}" ]]
 }
 
 # Convert romaji in buffer to hiragana
@@ -133,6 +148,27 @@ z-skk-convert-romaji() {
     Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER:1}"
 }
 
+# Process romaji input and update buffer
+z-skk-process-romaji-input() {
+    local key="$1"
+
+    # Add key to romaji buffer
+    Z_SKK_ROMAJI_BUFFER+="$key"
+
+    # Try to convert
+    if z-skk-convert-romaji; then
+        # If we got a conversion, insert it
+        if [[ -n "$Z_SKK_CONVERTED" ]]; then
+            if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
+                # Add to conversion buffer instead of direct insert
+                Z_SKK_BUFFER+="$Z_SKK_CONVERTED"
+            else
+                LBUFFER+="$Z_SKK_CONVERTED"
+            fi
+        fi
+    fi
+}
+
 # Clear marker display from buffer
 _z-skk-clear-marker-display() {
     local marker="$1"
@@ -175,6 +211,9 @@ z-skk-start-conversion() {
         return 1
     fi
 
+    # Error recovery wrapper
+    {
+
     # Look up the word in dictionary
     local entry
     if entry=$(z-skk-lookup "$Z_SKK_BUFFER"); then
@@ -204,6 +243,14 @@ z-skk-start-conversion() {
 
     # No candidates found - just cancel
     z-skk-cancel-conversion
+
+    } always {
+        # Error recovery
+        if [[ $? -ne 0 ]]; then
+            _z-skk-log-error "warn" "Error during conversion start"
+            z-skk-cancel-conversion
+        fi
+    }
 }
 
 # Update candidate display with ▼ marker
