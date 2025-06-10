@@ -90,6 +90,12 @@ z-skk-init() {
         # Continue without okurigana support
     }
 
+    # Load input modes module
+    z-skk-safe-source "$lib_dir/input-modes.zsh" || {
+        _z-skk-log-error "warn" "Failed to load input modes module"
+        # Continue without extended input modes
+    }
+
     # Load modes module
     z-skk-safe-source "$lib_dir/modes.zsh" || {
         _z-skk-log-error "error" "Failed to load modes module"

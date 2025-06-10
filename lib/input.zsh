@@ -18,10 +18,17 @@ _z-skk-handle-hiragana-special-key() {
             zle -R
             return 0
             ;;
+        /)
+            # Switch to abbrev mode
+            z-skk-start-abbrev-mode
+            zle -R
+            return 0
+            ;;
         q)
-            # Switch to katakana mode (future implementation)
-            # For now, continue to romaji processing
-            return 1
+            # Switch to katakana mode
+            z-skk-katakana-mode
+            zle -R
+            return 0
             ;;
     esac
 
@@ -178,27 +185,71 @@ _z-skk-handle-converting-input() {
 _z-skk-handle-katakana-input() {
     local key="$1"
 
-    # TODO: Implement katakana mode
-    # For now, treat as hiragana mode
-    _z-skk-handle-hiragana-input "$key"
+    # Check if already in conversion mode
+    if [[ $Z_SKK_CONVERTING -ge 1 ]]; then
+        # Handle input during conversion (same as hiragana)
+        _z-skk-handle-converting-input "$key"
+        return
+    fi
+
+    # Special key handling for katakana mode
+    if z-skk-handle-katakana-special "$key"; then
+        return
+    fi
+
+    # Check for uppercase (conversion start)
+    local processed_key="$key"
+    if [[ "$key" =~ ^[A-Z]$ ]]; then
+        # Start conversion mode
+        Z_SKK_CONVERTING=1
+        Z_SKK_BUFFER=""
+        Z_SKK_LAST_INPUT="$key"
+        # Convert uppercase to lowercase for romaji processing
+        processed_key="${key:l}"
+    fi
+
+    # Process romaji input as katakana
+    z-skk-process-katakana-input "$processed_key"
+
+    # Update display with marker if converting
+    if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
+        z-skk-update-conversion-display
+    fi
+
+    # Redraw the line
+    z-skk-safe-redraw
 }
 
 # Handle input in zenkaku mode
 _z-skk-handle-zenkaku-input() {
     local key="$1"
 
-    # TODO: Implement zenkaku mode
-    # For now, pass through
-    zle .self-insert
+    # Special key handling for zenkaku mode
+    if z-skk-handle-zenkaku-special "$key"; then
+        return
+    fi
+
+    # Process as zenkaku
+    z-skk-process-zenkaku-input "$key"
+
+    # Redraw the line
+    z-skk-safe-redraw
 }
 
 # Handle input in abbrev mode
 _z-skk-handle-abbrev-input() {
     local key="$1"
 
-    # TODO: Implement abbrev mode
-    # For now, pass through
-    zle .self-insert
+    # Special key handling for abbrev mode
+    if z-skk-handle-abbrev-special "$key"; then
+        return
+    fi
+
+    # Process abbreviation input
+    z-skk-process-abbrev-input "$key"
+
+    # Redraw the line
+    z-skk-safe-redraw
 }
 
 # Main input dispatcher

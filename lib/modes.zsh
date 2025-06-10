@@ -13,6 +13,15 @@ z-skk-set-mode() {
 
     # Clear buffers when switching modes
     if [[ "$Z_SKK_MODE" != "$new_mode" ]]; then
+        # Reset old mode's specific states
+        case "$Z_SKK_MODE" in
+            abbrev)
+                # Leaving abbrev mode, clear its state
+                Z_SKK_ABBREV_BUFFER=""
+                Z_SKK_ABBREV_ACTIVE=0
+                ;;
+        esac
+
         z-skk-reset-state
         Z_SKK_MODE="$new_mode"
 
@@ -25,7 +34,9 @@ z-skk-set-mode() {
                 # No special initialization needed
                 ;;
             abbrev)
-                # Future: Initialize abbrev mode
+                # Initialize abbrev mode state
+                Z_SKK_ABBREV_BUFFER=""
+                Z_SKK_ABBREV_ACTIVE=0
                 ;;
         esac
 
@@ -53,13 +64,29 @@ z-skk-katakana-mode() {
     z-skk-set-mode "katakana"
 }
 
+# Switch to zenkaku mode
+z-skk-zenkaku-mode() {
+    z-skk-set-mode "zenkaku"
+}
+
+# Switch to abbrev mode
+z-skk-abbrev-mode() {
+    z-skk-set-mode "abbrev"
+}
+
 # Toggle between hiragana and ASCII (C-j behavior)
 z-skk-toggle-kana() {
-    if [[ "$Z_SKK_MODE" == "hiragana" ]]; then
-        z-skk-ascii-mode
-    else
-        z-skk-hiragana-mode
-    fi
+    case "$Z_SKK_MODE" in
+        ascii)
+            z-skk-hiragana-mode
+            ;;
+        katakana|zenkaku|abbrev)
+            z-skk-hiragana-mode
+            ;;
+        *)
+            z-skk-ascii-mode
+            ;;
+    esac
 }
 
 # Get current mode display string

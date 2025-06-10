@@ -90,6 +90,8 @@ zle -N z-skk-self-insert
 zle -N z-skk-toggle-kana
 zle -N z-skk-ascii-mode
 zle -N z-skk-hiragana-mode
+zle -N z-skk-katakana-mode
+zle -N z-skk-zenkaku-mode
 zle -N z-skk-accept-line
 zle -N z-skk-keyboard-quit
 
@@ -113,6 +115,7 @@ z-skk-setup-keybindings() {
     # Mode switching keys
     bindkey "^J" z-skk-toggle-kana    # Toggle hiragana/ascii
     bindkey "^L" z-skk-ascii-mode     # Force ASCII mode
+    bindkey "^Q" z-skk-zenkaku-mode   # Zenkaku (full-width) mode
 
     # Special keys
     bindkey "^M" z-skk-accept-line    # Enter
