@@ -53,6 +53,12 @@ z-skk-init() {
         return 1
     }
 
+    # Load dictionary module
+    z-skk-safe-source "$lib_dir/dictionary.zsh" || {
+        _z-skk-log-error "error" "Failed to load dictionary module"
+        return 1
+    }
+
     # Load modes module
     z-skk-safe-source "$lib_dir/modes.zsh" || {
         _z-skk-log-error "error" "Failed to load modes module"
@@ -76,6 +82,11 @@ z-skk-init() {
         _z-skk-log-error "error" "Failed to load keybindings module"
         return 1
     }
+
+    # Initialize dictionary
+    if (( ${+functions[z-skk-init-dictionary]} )); then
+        z-skk-init-dictionary
+    fi
 
     # Setup display
     if (( ${+functions[z-skk-display-setup]} )); then

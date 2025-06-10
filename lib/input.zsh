@@ -74,37 +74,72 @@ _z-skk-handle-hiragana-input() {
 _z-skk-handle-converting-input() {
     local key="$1"
 
-    case "$key" in
-        " ")
-            # Space - start conversion
-            z-skk-start-conversion
-            return
-            ;;
-        $'\x07')  # C-g
-            # Cancel conversion
-            z-skk-cancel-conversion
-            return
-            ;;
-        $'\r')    # Enter
-            # Confirm conversion (for now, just cancel)
-            z-skk-cancel-conversion
-            return
-            ;;
-    esac
+    # Handle based on conversion state
+    if [[ $Z_SKK_CONVERTING -eq 2 ]]; then
+        # In candidate selection mode
+        case "$key" in
+            " ")
+                # Space - next candidate
+                z-skk-next-candidate
+                return
+                ;;
+            "x")
+                # x - previous candidate
+                z-skk-previous-candidate
+                return
+                ;;
+            $'\x07')  # C-g
+                # Cancel conversion
+                z-skk-cancel-conversion
+                return
+                ;;
+            $'\r')    # Enter
+                # Confirm current candidate
+                z-skk-confirm-candidate
+                return
+                ;;
+            *)
+                # Any other key confirms and continues
+                z-skk-confirm-candidate
+                # Process the new key in normal mode
+                _z-skk-handle-hiragana-input "$key"
+                return
+                ;;
+        esac
+    else
+        # In pre-conversion mode (CONVERTING=1)
+        case "$key" in
+            " ")
+                # Space - start conversion
+                z-skk-start-conversion
+                return
+                ;;
+            $'\x07')  # C-g
+                # Cancel conversion
+                z-skk-cancel-conversion
+                return
+                ;;
+            $'\r')    # Enter
+                # Confirm as-is
+                z-skk-cancel-conversion
+                return
+                ;;
+        esac
 
-    # Continue adding to buffer
-    local lower_key="${key:l}"
-    Z_SKK_ROMAJI_BUFFER+="$lower_key"
+        # Continue adding to buffer
+        local lower_key="${key:l}"
+        Z_SKK_ROMAJI_BUFFER+="$lower_key"
 
-    # Try to convert
-    if z-skk-convert-romaji; then
-        if [[ -n "$Z_SKK_CONVERTED" ]]; then
-            Z_SKK_BUFFER+="$Z_SKK_CONVERTED"
+        # Try to convert
+        if z-skk-convert-romaji; then
+            if [[ -n "$Z_SKK_CONVERTED" ]]; then
+                Z_SKK_BUFFER+="$Z_SKK_CONVERTED"
+            fi
         fi
-    fi
 
-    # Update display
-    z-skk-update-conversion-display
+        # Update display
+        z-skk-update-conversion-display
+    fi
 }
 
 # Handle input in katakana mode

@@ -136,8 +136,8 @@ test_space_during_conversion() {
     # Send Space
     _z-skk-handle-converting-input " "
 
-    # For now, it should cancel (no dictionary yet)
-    assert_equals "Conversion cancelled (no dictionary)" "0" "$Z_SKK_CONVERTING"
+    # Should move to candidate selection (we have dictionary now)
+    assert_equals "Moved to candidate selection" "2" "$Z_SKK_CONVERTING"
 }
 
 # Test Enter key during conversion
