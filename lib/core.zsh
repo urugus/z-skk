@@ -71,6 +71,12 @@ z-skk-init() {
         # Continue without file I/O support
     }
 
+    # Load registration module
+    z-skk-safe-source "$lib_dir/registration.zsh" || {
+        _z-skk-log-error "warn" "Failed to load registration module"
+        # Continue without registration support
+    }
+
     # Load modes module
     z-skk-safe-source "$lib_dir/modes.zsh" || {
         _z-skk-log-error "error" "Failed to load modes module"

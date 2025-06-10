@@ -50,11 +50,48 @@ z-skk-self-insert() {
     z-skk-handle-input "$KEYS"
 }
 
+# Accept line widget (Enter key)
+z-skk-accept-line() {
+    # Handle special states first
+    if z-skk-is-registering; then
+        z-skk-registration-input $'\r'
+        return
+    elif [[ $Z_SKK_CONVERTING -eq 2 ]]; then
+        # In candidate selection
+        z-skk-confirm-candidate
+        return
+    elif [[ $Z_SKK_CONVERTING -eq 1 ]]; then
+        # In pre-conversion
+        z-skk-cancel-conversion
+        return
+    fi
+
+    # Default behavior
+    zle accept-line
+}
+
+# Cancel key widget (C-g)
+z-skk-keyboard-quit() {
+    # Handle special states
+    if z-skk-is-registering; then
+        z-skk-registration-input $'\x07'
+        return
+    elif [[ $Z_SKK_CONVERTING -ge 1 ]]; then
+        z-skk-cancel-conversion
+        return
+    fi
+
+    # Default behavior
+    zle send-break
+}
+
 # Register ZLE widgets
 zle -N z-skk-self-insert
 zle -N z-skk-toggle-kana
 zle -N z-skk-ascii-mode
 zle -N z-skk-hiragana-mode
+zle -N z-skk-accept-line
+zle -N z-skk-keyboard-quit
 
 # Setup keybindings
 z-skk-setup-keybindings() {
@@ -76,6 +113,10 @@ z-skk-setup-keybindings() {
     # Mode switching keys
     bindkey "^J" z-skk-toggle-kana    # Toggle hiragana/ascii
     bindkey "^L" z-skk-ascii-mode     # Force ASCII mode
+
+    # Special keys
+    bindkey "^M" z-skk-accept-line    # Enter
+    bindkey "^G" z-skk-keyboard-quit  # C-g
 
     # Mark as setup
     typeset -g Z_SKK_KEYBINDINGS_SETUP=1

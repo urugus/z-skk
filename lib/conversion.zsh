@@ -241,8 +241,8 @@ z-skk-start-conversion() {
         fi
     fi
 
-    # No candidates found - just cancel
-    z-skk-cancel-conversion
+    # No candidates found - start registration mode
+    z-skk-start-registration "$Z_SKK_BUFFER"
 
     } always {
         # Error recovery

@@ -137,8 +137,13 @@ test_no_candidates() {
     # Try to convert
     z-skk-start-conversion
 
-    # Should cancel conversion since no candidates
-    assert_equals "Conversion cancelled" "0" "$Z_SKK_CONVERTING"
+    # Should enter registration mode since no candidates
+    assert_equals "Registration mode started" "1" "$Z_SKK_REGISTERING"
+    assert_equals "Registration reading" "ないよ" "$Z_SKK_REGISTER_READING"
+
+    # Cancel registration to get original text
+    z-skk-cancel-registration
+    assert_equals "Registration cancelled" "0" "$Z_SKK_REGISTERING"
     assert_equals "LBUFFER has original text" "testないよ" "$LBUFFER"
 }
 

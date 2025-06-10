@@ -187,6 +187,13 @@ _z-skk-handle-abbrev-input() {
 z-skk-handle-input() {
     local key="${1:-$KEYS}"
 
+    # Check if in registration mode first
+    if z-skk-is-registering; then
+        z-skk-registration-input "$key"
+        zle -R
+        return
+    fi
+
     # Dispatch to appropriate handler based on mode
     case "$Z_SKK_MODE" in
         ascii)
