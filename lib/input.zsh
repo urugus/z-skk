@@ -30,6 +30,36 @@ _z-skk-handle-hiragana-special-key() {
             zle -R
             return 0
             ;;
+        X)
+            # Convert previous character to katakana
+            z-skk-convert-previous-to-katakana
+            zle -R
+            return 0
+            ;;
+        @)
+            # Insert today's date
+            z-skk-insert-date
+            zle -R
+            return 0
+            ;;
+        ";")
+            # Start JIS code input
+            z-skk-code-input
+            zle -R
+            return 0
+            ;;
+        ">")
+            # Start suffix input mode
+            z-skk-start-suffix-input
+            zle -R
+            return 0
+            ;;
+        "?")
+            # Start prefix input mode
+            z-skk-start-prefix-input
+            zle -R
+            return 0
+            ;;
     esac
 
     return 1  # Not a special key
@@ -40,6 +70,18 @@ _z-skk-handle-hiragana-special-key() {
 # Handle input in hiragana mode
 _z-skk-handle-hiragana-input() {
     local key="$1"
+
+    # Check if in special input mode (code input, etc.)
+    if (( ${+functions[z-skk-is-special-input-mode]} )); then
+        if z-skk-is-special-input-mode; then
+            if [[ ${Z_SKK_CODE_INPUT_MODE:-0} -eq 1 ]]; then
+                z-skk-process-code-input "$key"
+                z-skk-safe-redraw
+                return
+            fi
+            # Handle other special modes in the future
+        fi
+    fi
 
     # Check if already in conversion mode
     if [[ $Z_SKK_CONVERTING -ge 1 ]]; then

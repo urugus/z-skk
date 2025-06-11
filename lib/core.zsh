@@ -51,6 +51,7 @@ typeset -gA Z_SKK_MODULES=(
     [registration]="optional"
     [okurigana]="optional"
     [input-modes]="optional"
+    [special-keys]="optional"
     [display]="optional"
 )
 
@@ -58,7 +59,7 @@ typeset -gA Z_SKK_MODULES=(
 typeset -ga Z_SKK_MODULE_ORDER=(
     error utils conversion dictionary-data dictionary
     dictionary-io registration okurigana input-modes
-    modes display input keybindings
+    special-keys modes display input keybindings
 )
 
 # Load a single module
