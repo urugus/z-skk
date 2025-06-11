@@ -63,7 +63,7 @@ z-skk-load-dictionary-file() {
     local count=0
     local max_errors=10
     local error_count=0
-    
+
     # Try to read file with error handling
     while IFS= read -r line || [[ -n "$line" ]]; do
         # Skip if we've hit too many errors
@@ -71,7 +71,7 @@ z-skk-load-dictionary-file() {
             _z-skk-log-error "warn" "Too many parse errors, stopping dictionary load"
             break
         fi
-        
+
         # Parse line with error handling
         local parsed
         if parsed=$(_z-skk-parse-dict-line "$line" 2>/dev/null); then
@@ -145,7 +145,7 @@ z-skk-init-dictionary-loading() {
         # Define a simple fallback
         _z-skk-log-error() { : ; }
     fi
-    
+
     # Load user dictionary if exists
     if [[ -f "$Z_SKK_USER_JISYO_PATH" ]]; then
         z-skk-load-dictionary-file "$Z_SKK_USER_JISYO_PATH" 2>/dev/null || {

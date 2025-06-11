@@ -82,9 +82,10 @@ test_split_converting_input() {
     assert "_z-skk-process-converting-character exists" '(( ${+functions[_z-skk-process-converting-character]} ))'
 
     # Test okurigana detection
-    Z_SKK_BUFFER="test"
-    Z_SKK_LAST_INPUT="K"
-    assert "Should detect okurigana" '_z-skk-should-start-okurigana "a"'
+    Z_SKK_CONVERTING=1
+    Z_SKK_BUFFER="おく"  # More than one character
+    Z_SKK_LAST_INPUT="R"  # Uppercase during conversion
+    assert "Should detect okurigana" '_z-skk-should-start-okurigana "i"'
 
     Z_SKK_LAST_INPUT="k"
     assert "Should not detect okurigana" '! _z-skk-should-start-okurigana "a"'

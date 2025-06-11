@@ -39,9 +39,12 @@ z-skk-process-okurigana() {
     # Process the lowercase letter for okurigana
     z-skk-process-romaji-input "$key"
 
-    # Store as okurigana suffix
-    if [[ -n "$Z_SKK_CONVERTED" ]]; then
-        Z_SKK_OKURIGANA_SUFFIX+="$Z_SKK_CONVERTED"
+    # Calculate okurigana suffix by removing prefix from full buffer
+    if [[ -n "$Z_SKK_OKURIGANA_PREFIX" && -n "$Z_SKK_BUFFER" ]]; then
+        local prefix_len=${#Z_SKK_OKURIGANA_PREFIX}
+        if [[ ${#Z_SKK_BUFFER} -gt $prefix_len ]]; then
+            Z_SKK_OKURIGANA_SUFFIX="${Z_SKK_BUFFER:$prefix_len}"
+        fi
     fi
 
     return 0

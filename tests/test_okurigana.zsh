@@ -78,7 +78,6 @@ test_okurigana_input_processing() {
     assert_equals "Buffer has おく" "おく" "$Z_SKK_BUFFER"
 
     # R -> should trigger okurigana mode on next lowercase
-    Z_SKK_LAST_INPUT="R"
     _z-skk-handle-converting-input "R"
 
     # i -> start okurigana

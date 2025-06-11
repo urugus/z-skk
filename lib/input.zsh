@@ -108,7 +108,7 @@ _z-skk-handle-hiragana-input() {
 
     # Process romaji input
     z-skk-process-romaji-input "$processed_key"
-    
+
     # Store the key after processing (important for okurigana detection)
     Z_SKK_LAST_INPUT="$key"
 
@@ -223,21 +223,20 @@ _z-skk-should-start-okurigana() {
 
     # Okurigana starts when:
     # 1. Current input is lowercase
-    # 2. Last input was uppercase 
+    # 2. Last input was uppercase
     # 3. We're already in conversion mode
-    # 4. We're NOT at the very beginning of conversion
-    #    (i.e., the uppercase that started conversion doesn't count)
+    # 4. The uppercase was NOT the one that started conversion
     if [[ "$key" =~ ^[a-z]$ ]]; then
         local last_input="${Z_SKK_LAST_INPUT:-}"
-        if [[ "$last_input" =~ ^[A-Z]$ && 
-              $Z_SKK_CONVERTING -eq 1 && 
-              -n "$Z_SKK_BUFFER" && 
-              -z "$Z_SKK_ROMAJI_BUFFER" ]]; then
-            # Additional check: the uppercase letter should not be the one
-            # that started the conversion (i.e., buffer should have more than
-            # just the initial converted character)
-            # This prevents "Ok" from immediately starting okurigana
-            return 0
+        if [[ "$last_input" =~ ^[A-Z]$ &&
+              $Z_SKK_CONVERTING -eq 1 &&
+              -n "$Z_SKK_BUFFER" ]]; then
+            # The uppercase should be DURING conversion, not the initial one
+            # Check if we have more than one character in the buffer
+            # (The initial uppercase would only create one hiragana character)
+            if [[ ${#Z_SKK_BUFFER} -gt 1 || -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
+                return 0
+            fi
         fi
     fi
     return 1
@@ -246,17 +245,24 @@ _z-skk-should-start-okurigana() {
 # Process a character during conversion
 _z-skk-process-converting-character() {
     local key="$1"
-    
+
     # Check for uppercase during conversion - this means okurigana start marker
     if [[ "$key" =~ ^[A-Z]$ && ! z-skk-is-okurigana-mode ]]; then
         # This is the marker for okurigana start
+        # Complete any pending romaji conversion first
+        z-skk-convert-romaji
+        if [[ -n "$Z_SKK_CONVERTED" ]]; then
+            Z_SKK_BUFFER+="$Z_SKK_CONVERTED"
+        fi
+        # Now we can start okurigana mode with the complete prefix
+        z-skk-start-okurigana
         # Store it but don't process the character
         Z_SKK_LAST_INPUT="$key"
         # Still need to update display to show the romaji buffer
         z-skk-update-conversion-display
         return
     fi
-    
+
     local lower_key="${key:l}"
 
     # Process based on current mode

@@ -81,7 +81,7 @@ z-skk-clear-marker() {
             # Marker found, clear it and content
             LBUFFER="$marker_pos"
         fi
-        
+
         # Also clear from RBUFFER if needed
         RBUFFER="${RBUFFER#*${content}}"
         RBUFFER="${RBUFFER#*]}"  # For registration mode
