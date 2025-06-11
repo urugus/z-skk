@@ -18,16 +18,19 @@ typeset -gA Z_SKK_ROMAJI_TO_HIRAGANA=(
     [gya]="ぎゃ" [gyu]="ぎゅ" [gyo]="ぎょ"
 
     # S-row
-    [sa]="さ" [shi]="し" [su]="す" [se]="せ" [so]="そ"
+    [sa]="さ" [shi]="し" [si]="し" [su]="す" [se]="せ" [so]="そ"
     [sha]="しゃ" [shu]="しゅ" [sho]="しょ"
+    [sya]="しゃ" [syu]="しゅ" [syo]="しょ"  # Alternative spellings
 
     # Z-row
-    [za]="ざ" [ji]="じ" [zu]="ず" [ze]="ぜ" [zo]="ぞ"
+    [za]="ざ" [ji]="じ" [zi]="じ" [zu]="ず" [ze]="ぜ" [zo]="ぞ"
     [ja]="じゃ" [ju]="じゅ" [jo]="じょ"
+    [zya]="じゃ" [zyu]="じゅ" [zyo]="じょ"  # Alternative spellings
 
     # T-row
-    [ta]="た" [chi]="ち" [tsu]="つ" [te]="て" [to]="と"
+    [ta]="た" [chi]="ち" [ti]="ち" [tsu]="つ" [tu]="つ" [te]="て" [to]="と"
     [cha]="ちゃ" [chu]="ちゅ" [cho]="ちょ"
+    [tya]="ちゃ" [tyu]="ちゅ" [tyo]="ちょ"  # Alternative spellings
 
     # D-row
     [da]="だ" [di]="ぢ" [du]="づ" [de]="で" [do]="ど"
@@ -64,7 +67,15 @@ typeset -gA Z_SKK_ROMAJI_TO_HIRAGANA=(
     [wa]="わ" [wi]="ゐ" [we]="ゑ" [wo]="を"
 
     # N
-    [n]="ん" [nn]="ん"
+    [n]="ん" [nn]="ん" ["n'"]="ん"
+
+    # Small characters
+    [xtsu]="っ" [xtu]="っ" [ltsu]="っ" [ltu]="っ"
+    [xa]="ぁ" [xi]="ぃ" [xu]="ぅ" [xe]="ぇ" [xo]="ぉ"
+    [la]="ぁ" [li]="ぃ" [lu]="ぅ" [le]="ぇ" [lo]="ぉ"
+    [xya]="ゃ" [xyu]="ゅ" [xyo]="ょ"
+    [lya]="ゃ" [lyu]="ゅ" [lyo]="ょ"
+    [xwa]="ゎ" [lwa]="ゎ"
 
     # Special characters
     [-]="ー"
