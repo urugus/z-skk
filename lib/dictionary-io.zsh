@@ -65,6 +65,7 @@ z-skk-load-dictionary-file() {
     local error_count=0
 
     # Try to read file with error handling
+    {
     while IFS= read -r line || [[ -n "$line" ]]; do
         # Skip if we've hit too many errors
         if ((error_count >= max_errors)); then
@@ -73,9 +74,9 @@ z-skk-load-dictionary-file() {
         fi
 
         # Parse line with error handling
-        local parsed
-        if parsed=$(_z-skk-parse-dict-line "$line" 2>/dev/null); then
-            local -a parsed_array=(${(f)parsed})
+        local parsed_result=""
+        if parsed_result=$(_z-skk-parse-dict-line "$line" 2>/dev/null) 2>/dev/null; then
+            local -a parsed_array=(${(f)parsed_result})
             if [[ ${#parsed_array[@]} -eq 2 ]]; then
                 reading="${parsed_array[1]}"
                 candidates="${parsed_array[2]}"
@@ -92,6 +93,7 @@ z-skk-load-dictionary-file() {
             ((error_count++))
         fi
     done < <(cat "$dict_file" 2>/dev/null || true)
+    } 2>/dev/null
 
     _z-skk-log-error "info" "Loaded $count entries from $dict_file"
     return 0
@@ -147,6 +149,7 @@ z-skk-init-dictionary-loading() {
     fi
 
     # Load user dictionary if exists
+    {
     if [[ -f "$Z_SKK_USER_JISYO_PATH" ]]; then
         z-skk-load-dictionary-file "$Z_SKK_USER_JISYO_PATH" 2>/dev/null || {
             _z-skk-log-error "warn" "Failed to load user dictionary"
@@ -159,6 +162,7 @@ z-skk-init-dictionary-loading() {
             _z-skk-log-error "warn" "Failed to load system dictionary"
         }
     fi
+    } >/dev/null 2>&1
 
     return 0
 }
