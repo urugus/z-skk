@@ -350,12 +350,10 @@ z-skk-confirm-candidate() {
         # Insert the selected candidate
         LBUFFER+="$current_candidate"
 
-        # Reset state
-        Z_SKK_CONVERTING=0
-        Z_SKK_BUFFER=""
-        Z_SKK_CANDIDATES=()
-        Z_SKK_CANDIDATE_INDEX=0
-        Z_SKK_OKURIGANA_SUFFIX=""
+        # Reset all conversion-related state
+        z-skk-reset core:1 romaji:1 okurigana:1
+        # Also reset last input
+        Z_SKK_LAST_INPUT=""
     fi
 }
 
@@ -375,10 +373,9 @@ z-skk-cancel-conversion() {
             LBUFFER+="$Z_SKK_BUFFER"
         fi
 
-        # Reset conversion state
-        Z_SKK_CONVERTING=0
-        Z_SKK_BUFFER=""
-        Z_SKK_CANDIDATES=()
-        Z_SKK_CANDIDATE_INDEX=0
+        # Reset all conversion-related state
+        z-skk-reset core:1 romaji:1 okurigana:1 display:1
+        # Also reset last input
+        Z_SKK_LAST_INPUT=""
     fi
 }
