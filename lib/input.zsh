@@ -144,41 +144,63 @@ _z-skk-handle-converting-input() {
     if [[ $Z_SKK_CONVERTING -eq 2 ]]; then
         # In candidate selection mode
         _z-skk-handle-candidate-selection-key "$key"
-        return
     else
         # In pre-conversion mode (CONVERTING=1)
-        if _z-skk-handle-pre-conversion-key "$key"; then
-            return
-        fi
-
-        # Check for okurigana start (uppercase followed by lowercase)
-        if [[ "$key" =~ ^[a-z]$ && -n "$Z_SKK_BUFFER" ]]; then
-            # Check if we should start okurigana mode
-            local last_input="${Z_SKK_LAST_INPUT:-}"
-            if [[ "$last_input" =~ ^[A-Z]$ ]]; then
-                # Start okurigana mode
-                z-skk-start-okurigana
-                z-skk-process-okurigana "$key"
-                Z_SKK_LAST_INPUT="$key"
-                z-skk-update-conversion-display
-                return
-            fi
-        fi
-
-        # Continue adding to buffer
-        local lower_key="${key:l}"
-        if z-skk-is-okurigana-mode; then
-            z-skk-process-okurigana "$lower_key"
-        else
-            z-skk-process-romaji-input "$lower_key"
-        fi
-
-        # Store last input
-        Z_SKK_LAST_INPUT="$key"
-
-        # Update display
-        z-skk-update-conversion-display
+        _z-skk-handle-pre-conversion-input "$key"
     fi
+}
+
+# Handle input during pre-conversion state
+_z-skk-handle-pre-conversion-input() {
+    local key="$1"
+
+    # Try special key handling first
+    if _z-skk-handle-pre-conversion-key "$key"; then
+        return
+    fi
+
+    # Check for okurigana start
+    if _z-skk-should-start-okurigana "$key"; then
+        z-skk-start-okurigana
+        z-skk-process-okurigana "$key"
+        Z_SKK_LAST_INPUT="$key"
+        z-skk-update-conversion-display
+        return
+    fi
+
+    # Normal character processing
+    _z-skk-process-converting-character "$key"
+}
+
+# Check if we should start okurigana mode
+_z-skk-should-start-okurigana() {
+    local key="$1"
+
+    # Okurigana starts with lowercase after uppercase
+    if [[ "$key" =~ ^[a-z]$ && -n "$Z_SKK_BUFFER" ]]; then
+        local last_input="${Z_SKK_LAST_INPUT:-}"
+        if [[ "$last_input" =~ ^[A-Z]$ ]]; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+# Process a character during conversion
+_z-skk-process-converting-character() {
+    local key="$1"
+    local lower_key="${key:l}"
+
+    # Process based on current mode
+    if z-skk-is-okurigana-mode; then
+        z-skk-process-okurigana "$lower_key"
+    else
+        z-skk-process-romaji-input "$lower_key"
+    fi
+
+    # Store last input and update display
+    Z_SKK_LAST_INPUT="$key"
+    z-skk-update-conversion-display
 }
 
 # Handle input in katakana mode

@@ -86,6 +86,40 @@ z-skk-with-error-handling() {
     return 0
 }
 
+# Standard error handling wrapper with recovery
+# Usage: z-skk-safe-operation "operation_name" command args...
+z-skk-safe-operation() {
+    local operation_name="$1"
+    shift
+
+    {
+        "$@"
+    } always {
+        if [[ $? -ne 0 ]]; then
+            _z-skk-log-error "warn" "Error during $operation_name"
+            # Attempt recovery based on operation type
+            case "$operation_name" in
+                conversion*)
+                    z-skk-cancel-conversion
+                    ;;
+                registration*)
+                    z-skk-cancel-registration
+                    ;;
+                display*)
+                    # Safe to ignore display errors
+                    ;;
+                *)
+                    # Generic recovery
+                    z-skk-unified-reset "basic" 2>/dev/null || true
+                    ;;
+            esac
+            return 1
+        fi
+    }
+
+    return 0
+}
+
 # Validate input parameters
 z-skk-validate-params() {
     local param_count=$1

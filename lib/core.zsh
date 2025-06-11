@@ -19,14 +19,94 @@ typeset -gA Z_SKK_MODES=(
     [abbrev]="Abbrev"
 )
 
-# Reset state function
+# Reset state function - delegates to unified reset
 z-skk-reset-state() {
-    Z_SKK_BUFFER=""
-    Z_SKK_CONVERTING=0
-    Z_SKK_CANDIDATES=()
-    Z_SKK_CANDIDATE_INDEX=0
-    # Reset romaji buffer if it exists (from conversion module)
-    [[ -v Z_SKK_ROMAJI_BUFFER ]] && Z_SKK_ROMAJI_BUFFER=""
+    # Use unified reset function from utils.zsh
+    if (( ${+functions[z-skk-unified-reset]} )); then
+        z-skk-unified-reset "basic"
+    else
+        # Fallback if utils.zsh not loaded yet
+        Z_SKK_BUFFER=""
+        Z_SKK_CONVERTING=0
+        Z_SKK_CANDIDATES=()
+        Z_SKK_CANDIDATE_INDEX=0
+        [[ -v Z_SKK_ROMAJI_BUFFER ]] && Z_SKK_ROMAJI_BUFFER=""
+    fi
+}
+
+# Module loading configuration
+typeset -gA Z_SKK_MODULES=(
+    # Required modules (loading failure is fatal)
+    [error]="required"
+    [utils]="required"
+    [conversion]="required"
+    [dictionary-data]="required"
+    [dictionary]="required"
+    [modes]="required"
+    [input]="required"
+    [keybindings]="required"
+
+    # Optional modules (loading failure is non-fatal)
+    [dictionary-io]="optional"
+    [registration]="optional"
+    [okurigana]="optional"
+    [input-modes]="optional"
+    [display]="optional"
+)
+
+# Module loading order (important for dependencies)
+typeset -ga Z_SKK_MODULE_ORDER=(
+    error utils conversion dictionary-data dictionary
+    dictionary-io registration okurigana input-modes
+    modes display input keybindings
+)
+
+# Load a single module
+_z-skk-load-module() {
+    local module="$1"
+    local requirement="${Z_SKK_MODULES[$module]:-optional}"
+    local lib_dir="${Z_SKK_DIR}/lib"
+    local module_file="$lib_dir/$module.zsh"
+
+    if [[ ! -f "$module_file" ]]; then
+        if [[ "$requirement" == "required" ]]; then
+            print "z-skk: Required module not found: $module" >&2
+            return 1
+        fi
+        return 0
+    fi
+
+    # Special case for error module (no safe-source yet)
+    if [[ "$module" == "error" ]]; then
+        source "$module_file" || {
+            print "z-skk: Failed to load error handling" >&2
+            return 1
+        }
+        return 0
+    fi
+
+    # Use safe-source for other modules
+    if ! z-skk-safe-source "$module_file"; then
+        if [[ "$requirement" == "required" ]]; then
+            _z-skk-log-error "error" "Failed to load required module: $module"
+            return 1
+        else
+            _z-skk-log-error "warn" "Failed to load optional module: $module"
+        fi
+    fi
+
+    return 0
+}
+
+# Load all modules in order
+_z-skk-load-all-modules() {
+    local module
+
+    for module in "${Z_SKK_MODULE_ORDER[@]}"; do
+        _z-skk-load-module "$module" || return 1
+    done
+
+    return 0
 }
 
 # Initialize z-skk
@@ -37,89 +117,18 @@ z-skk-init() {
     # Set default mode
     Z_SKK_MODE="ascii"
 
-    # Load modules
-    local lib_dir="${Z_SKK_DIR}/lib"
+    # Load all modules
+    _z-skk-load-all-modules || return 1
 
-    # Load error handling first
-    if [[ -f "$lib_dir/error.zsh" ]]; then
-        source "$lib_dir/error.zsh" || {
-            print "z-skk: Failed to load error handling" >&2
-            return 1
-        }
-    fi
+    # Post-load initialization
+    _z-skk-post-load-init
 
-    # Load utilities
-    z-skk-safe-source "$lib_dir/utils.zsh" || {
-        _z-skk-log-error "error" "Failed to load utilities"
-        return 1
-    }
+    print "z-skk: Initialized (v${Z_SKK_VERSION})"
+    return 0
+}
 
-    # Load conversion module
-    z-skk-safe-source "$lib_dir/conversion.zsh" || {
-        _z-skk-log-error "error" "Failed to load conversion module"
-        return 1
-    }
-
-    # Load dictionary data first
-    z-skk-safe-source "$lib_dir/dictionary-data.zsh" || {
-        _z-skk-log-error "error" "Failed to load dictionary data"
-        return 1
-    }
-
-    # Load dictionary operations
-    z-skk-safe-source "$lib_dir/dictionary.zsh" || {
-        _z-skk-log-error "error" "Failed to load dictionary module"
-        return 1
-    }
-
-    # Load dictionary I/O
-    z-skk-safe-source "$lib_dir/dictionary-io.zsh" || {
-        _z-skk-log-error "warn" "Failed to load dictionary I/O module"
-        # Continue without file I/O support
-    }
-
-    # Load registration module
-    z-skk-safe-source "$lib_dir/registration.zsh" || {
-        _z-skk-log-error "warn" "Failed to load registration module"
-        # Continue without registration support
-    }
-
-    # Load okurigana module
-    z-skk-safe-source "$lib_dir/okurigana.zsh" || {
-        _z-skk-log-error "warn" "Failed to load okurigana module"
-        # Continue without okurigana support
-    }
-
-    # Load input modes module
-    z-skk-safe-source "$lib_dir/input-modes.zsh" || {
-        _z-skk-log-error "warn" "Failed to load input modes module"
-        # Continue without extended input modes
-    }
-
-    # Load modes module
-    z-skk-safe-source "$lib_dir/modes.zsh" || {
-        _z-skk-log-error "error" "Failed to load modes module"
-        return 1
-    }
-
-    # Load display module
-    z-skk-safe-source "$lib_dir/display.zsh" || {
-        _z-skk-log-error "warn" "Failed to load display module"
-        # Continue without display
-    }
-
-    # Load input module
-    z-skk-safe-source "$lib_dir/input.zsh" || {
-        _z-skk-log-error "error" "Failed to load input module"
-        return 1
-    }
-
-    # Load keybindings module
-    z-skk-safe-source "$lib_dir/keybindings.zsh" || {
-        _z-skk-log-error "error" "Failed to load keybindings module"
-        return 1
-    }
-
+# Post-load initialization tasks
+_z-skk-post-load-init() {
     # Initialize dictionary
     if (( ${+functions[z-skk-init-dictionary]} )); then
         z-skk-init-dictionary
@@ -134,7 +143,4 @@ z-skk-init() {
     if (( ${+functions[z-skk-display-setup]} )); then
         z-skk-display-setup
     fi
-
-    print "z-skk: Initialized (v${Z_SKK_VERSION})"
-    return 0
 }

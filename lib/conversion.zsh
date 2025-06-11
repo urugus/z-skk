@@ -258,31 +258,28 @@ z-skk-start-conversion() {
         z-skk-complete-okurigana
     fi
 
-    # Error recovery wrapper
-    {
-        # Look up candidates
-        local -a raw_candidates=()
-        # Clear display before lookup
-        z-skk-clear-marker "▽" ""
-        if raw_candidates=($(_z-skk-lookup-candidates "$Z_SKK_BUFFER")); then
-            # Prepare candidates for selection
-            Z_SKK_CANDIDATES=($(_z-skk-prepare-candidates "${raw_candidates[@]}"))
+    # Use standardized error handling
+    z-skk-safe-operation "conversion_start" _z-skk-perform-conversion
+}
 
-            # Switch to selection mode
-            _z-skk-switch-to-selection-mode
-            return 0
-        fi
+# Perform the actual conversion (separated for error handling)
+_z-skk-perform-conversion() {
+    local -a raw_candidates=()
 
-        # No candidates found - start registration mode
-        z-skk-start-registration "$Z_SKK_BUFFER"
+    # Clear display before lookup
+    z-skk-clear-marker "▽" ""
 
-    } always {
-        # Error recovery
-        if [[ $? -ne 0 ]]; then
-            _z-skk-log-error "warn" "Error during conversion start"
-            z-skk-cancel-conversion
-        fi
-    }
+    if raw_candidates=($(_z-skk-lookup-candidates "$Z_SKK_BUFFER")); then
+        # Prepare candidates for selection
+        Z_SKK_CANDIDATES=($(_z-skk-prepare-candidates "${raw_candidates[@]}"))
+
+        # Switch to selection mode
+        _z-skk-switch-to-selection-mode
+        return 0
+    fi
+
+    # No candidates found - start registration mode
+    z-skk-start-registration "$Z_SKK_BUFFER"
 }
 
 # Update candidate display with ▼ marker
