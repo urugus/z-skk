@@ -192,6 +192,9 @@ z-skk-update-conversion-display() {
             fi
         fi
 
+        # Clear previous marker before adding new one
+        z-skk-clear-marker "▽" ""
+        
         # Update the display
         z-skk-add-marker "▽" "$display_text"
     fi

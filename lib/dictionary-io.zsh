@@ -19,8 +19,9 @@ _z-skk-parse-dict-line() {
     # Skip comments (lines starting with ;;)
     [[ "$line" == ";;"* ]] && return 1
 
-    # Skip lines with only whitespace
-    [[ "$line" =~ ^[[:space:]]+$ ]] && return 1
+    # Skip lines with only whitespace (avoid regex for better compatibility)
+    local trimmed="${line//[[:space:]]/}"
+    [[ -z "$trimmed" ]] && return 1
 
     # Parse line: reading /candidate1/candidate2/
     # Use simple pattern matching instead of regex
@@ -58,24 +59,39 @@ z-skk-load-dictionary-file() {
         return 1
     fi
 
-    # Read file line by line
+    # Read file line by line with proper encoding handling
     local count=0
-    while IFS= read -r line; do
-        local parsed=($(_z-skk-parse-dict-line "$line"))
-        if [[ ${#parsed[@]} -eq 2 ]]; then
-            reading="${parsed[1]}"
-            candidates="${parsed[2]}"
-            # Add to dictionary
-            if [[ -n "${Z_SKK_DICTIONARY[$reading]}" ]]; then
-                # Merge with existing entries
-                Z_SKK_DICTIONARY[$reading]="${Z_SKK_DICTIONARY[$reading]}/${candidates}"
-            else
-                Z_SKK_DICTIONARY[$reading]="$candidates"
-            fi
-
-            ((count++))
+    local max_errors=10
+    local error_count=0
+    
+    # Try to read file with error handling
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        # Skip if we've hit too many errors
+        if ((error_count >= max_errors)); then
+            _z-skk-log-error "warn" "Too many parse errors, stopping dictionary load"
+            break
         fi
-    done < "$dict_file"
+        
+        # Parse line with error handling
+        local parsed
+        if parsed=$(_z-skk-parse-dict-line "$line" 2>/dev/null); then
+            local -a parsed_array=(${(f)parsed})
+            if [[ ${#parsed_array[@]} -eq 2 ]]; then
+                reading="${parsed_array[1]}"
+                candidates="${parsed_array[2]}"
+                # Add to dictionary
+                if [[ -n "${Z_SKK_DICTIONARY[$reading]}" ]]; then
+                    # Merge with existing entries
+                    Z_SKK_DICTIONARY[$reading]="${Z_SKK_DICTIONARY[$reading]}/${candidates}"
+                else
+                    Z_SKK_DICTIONARY[$reading]="$candidates"
+                fi
+                ((count++))
+            fi
+        else
+            ((error_count++))
+        fi
+    done < <(cat "$dict_file" 2>/dev/null || true)
 
     _z-skk-log-error "info" "Loaded $count entries from $dict_file"
     return 0
@@ -124,14 +140,24 @@ z-skk-save-user-dictionary() {
 
 # Initialize dictionary loading
 z-skk-init-dictionary-loading() {
+    # Ensure error logging is available
+    if ! (( ${+functions[_z-skk-log-error]} )); then
+        # Define a simple fallback
+        _z-skk-log-error() { : ; }
+    fi
+    
     # Load user dictionary if exists
     if [[ -f "$Z_SKK_USER_JISYO_PATH" ]]; then
-        z-skk-load-dictionary-file "$Z_SKK_USER_JISYO_PATH"
+        z-skk-load-dictionary-file "$Z_SKK_USER_JISYO_PATH" 2>/dev/null || {
+            _z-skk-log-error "warn" "Failed to load user dictionary"
+        }
     fi
 
     # Load system dictionary if specified
     if [[ -n "$Z_SKK_SYSTEM_JISYO_PATH" && -f "$Z_SKK_SYSTEM_JISYO_PATH" ]]; then
-        z-skk-load-dictionary-file "$Z_SKK_SYSTEM_JISYO_PATH"
+        z-skk-load-dictionary-file "$Z_SKK_SYSTEM_JISYO_PATH" 2>/dev/null || {
+            _z-skk-log-error "warn" "Failed to load system dictionary"
+        }
     fi
 
     return 0

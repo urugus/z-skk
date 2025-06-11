@@ -73,10 +73,16 @@ z-skk-clear-marker() {
     local marker="$1"
     local content="$2"
 
-    # Clear from both LBUFFER and RBUFFER
+    # Clear from LBUFFER - find and remove marker and everything after it
     if [[ -n "$marker" ]]; then
-        # Try different patterns to ensure clean removal
-        LBUFFER="${LBUFFER%${marker}*}"
+        # Find the last occurrence of the marker
+        local marker_pos="${LBUFFER%${marker}*}"
+        if [[ "$marker_pos" != "$LBUFFER" ]]; then
+            # Marker found, clear it and content
+            LBUFFER="$marker_pos"
+        fi
+        
+        # Also clear from RBUFFER if needed
         RBUFFER="${RBUFFER#*${content}}"
         RBUFFER="${RBUFFER#*]}"  # For registration mode
     fi
