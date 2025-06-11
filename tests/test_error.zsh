@@ -18,8 +18,10 @@ assert '[[ -n ${functions[z-skk-safe-zle]} ]]' "z-skk-safe-zle function exists"
 assert '[[ -n ${functions[z-skk-error-reset]} ]]' "z-skk-error-reset function exists"
 
 # Test safe source with non-existent file
+z-skk-safe-source "/tmp/non-existent-file.zsh" 2>&1
+exit_code=$?
 result=$(z-skk-safe-source "/tmp/non-existent-file.zsh" 2>&1)
-assert '[[ $? -ne 0 ]]' "Safe source returns error for non-existent file"
+assert "[[ $exit_code -ne 0 ]]" "Safe source returns error for non-existent file"
 assert '[[ "$result" == *"WARN"* ]]' "Safe source logs warning for non-existent file"
 
 # Test error reset

@@ -54,6 +54,17 @@ else
 fi
 print ""
 
+# 5. Check naming conventions
+print "5. Checking naming conventions..."
+if zsh "$PROJECT_DIR/scripts/check-naming-conventions.zsh" >/dev/null 2>&1; then
+    print "✓ All naming conventions are correct"
+else
+    print "✗ Naming convention errors found"
+    zsh "$PROJECT_DIR/scripts/check-naming-conventions.zsh" 2>&1 | grep "ERROR" | head -10
+    (( ERRORS++ ))
+fi
+print ""
+
 # Summary
 print "=== Pre-commit check summary ==="
 if [[ $ERRORS -eq 0 ]]; then

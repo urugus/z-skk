@@ -247,7 +247,7 @@ _z-skk-process-converting-character() {
     local key="$1"
 
     # Check for uppercase during conversion - this means okurigana start marker
-    if [[ "$key" =~ ^[A-Z]$ && ! z-skk-is-okurigana-mode ]]; then
+    if [[ "$key" =~ ^[A-Z]$ ]] && (( ! ${+functions[z-skk-is-okurigana-mode]} )) || ! z-skk-is-okurigana-mode; then
         # This is the marker for okurigana start
         # Complete any pending romaji conversion first
         z-skk-convert-romaji
@@ -266,7 +266,7 @@ _z-skk-process-converting-character() {
     local lower_key="${key:l}"
 
     # Process based on current mode
-    if z-skk-is-okurigana-mode; then
+    if (( ${+functions[z-skk-is-okurigana-mode]} )) && z-skk-is-okurigana-mode; then
         z-skk-process-okurigana "$lower_key"
     else
         z-skk-process-romaji-input "$lower_key"

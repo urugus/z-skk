@@ -19,13 +19,13 @@ typeset -gA Z_SKK_MODES=(
     [abbrev]="Abbrev"
 )
 
-# Reset state function - delegates to unified reset
+# Reset state function - delegates to reset.zsh
 z-skk-reset-state() {
-    # Use unified reset function from utils.zsh
-    if (( ${+functions[z-skk-unified-reset]} )); then
-        z-skk-unified-reset "basic"
+    # Use reset function from reset.zsh
+    if (( ${+functions[z-skk-reset]} )); then
+        z-skk-reset core:1 romaji:1
     else
-        # Fallback if utils.zsh not loaded yet
+        # Fallback if reset.zsh not loaded yet
         Z_SKK_BUFFER=""
         Z_SKK_CONVERTING=0
         Z_SKK_CANDIDATES=()
@@ -37,34 +37,52 @@ z-skk-reset-state() {
 # Module loading configuration
 typeset -gA Z_SKK_MODULES=(
     # Required modules (loading failure is fatal)
-    [error]="required"
     [error-handling]="required"
     [reset]="required"
     [conversion-tables]="required"
     [utils]="required"
+    [events]="required"     # Event system for loose coupling
+    [lazy-load]="required"  # Lazy loading infrastructure
     [command-dispatch]="optional"
-    [conversion]="required"
+    [romaji-processing]="required"
+    [candidate-management]="required"
+    [conversion-display]="required"
+    [conversion-control]="required"
+    [conversion]="optional"  # Compatibility layer
     [dictionary-data]="required"
     [dictionary]="required"
     [modes]="required"
     [input]="required"
     [keybindings]="required"
-
-    # Optional modules (loading failure is non-fatal)
-    [dictionary-io]="optional"
-    [registration]="optional"
-    [okurigana]="optional"
-    [input-modes]="optional"
-    [special-keys]="optional"
     [display]="optional"
+
+    # Lazy-loaded modules (not loaded at startup)
+    [dictionary-io]="lazy"
+    [registration]="lazy"
+    [okurigana]="lazy"
+    [input-modes]="lazy"
+    [special-keys]="lazy"
 )
 
 # Module loading order (important for dependencies)
 typeset -ga Z_SKK_MODULE_ORDER=(
-    error error-handling reset conversion-tables utils
-    command-dispatch conversion dictionary-data dictionary
-    dictionary-io registration okurigana input-modes
-    special-keys modes display input keybindings
+    # Base infrastructure (no dependencies)
+    error-handling conversion-tables
+    # Core utilities (minimal dependencies)
+    utils events dictionary-data lazy-load
+    # Display system (needed by many modules)
+    display
+    # Core systems
+    reset dictionary modes
+    # Optional modules
+    command-dispatch
+    # Conversion modules (split for modularity)
+    romaji-processing candidate-management
+    conversion-display conversion-control
+    # Compatibility layer
+    conversion
+    # Top-level modules
+    input keybindings
 )
 
 # Load a single module
@@ -74,6 +92,12 @@ _z-skk-load-module() {
     local lib_dir="${Z_SKK_DIR}/lib"
     local module_file="$lib_dir/$module.zsh"
 
+    # Skip lazy modules during initial load
+    if [[ "$requirement" == "lazy" ]]; then
+        _z-skk-log-error "info" "Skipping lazy module: $module"
+        return 0
+    fi
+
     if [[ ! -f "$module_file" ]]; then
         if [[ "$requirement" == "required" ]]; then
             print "z-skk: Required module not found: $module" >&2
@@ -82,8 +106,8 @@ _z-skk-load-module() {
         return 0
     fi
 
-    # Special case for error module (no safe-source yet)
-    if [[ "$module" == "error" ]]; then
+    # Special case for error-handling module (no safe-source yet)
+    if [[ "$module" == "error-handling" ]]; then
         source "$module_file" || {
             print "z-skk: Failed to load error handling" >&2
             return 1

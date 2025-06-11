@@ -7,15 +7,15 @@ typeset -g TESTS_FAILED=0
 
 # Simple assertion function
 assert() {
-    local description="$1"
-    local condition="$2"
+    local condition="$1"
+    local description="$2"
 
     if eval "$condition"; then
         print "✓ $description"
         (( TESTS_PASSED++ ))
     else
         print "✗ $description"
-        print "  Condition failed: $condition"
+        print "  Condition failed: $description"
         (( TESTS_FAILED++ ))
     fi
 }

@@ -138,8 +138,8 @@ z-skk-line-init() {
     z-skk-setup-keybindings
 
     # Call original zle-line-init if it exists
-    if (( ${+functions[_z_skk_orig_line_init]} )); then
-        _z_skk_orig_line_init "$@"
+    if (( ${+functions[_z-skk-orig-line-init]} )); then
+        _z-skk-orig-line-init "$@"
     fi
 }
 
@@ -147,7 +147,7 @@ z-skk-line-init() {
 if [[ -o interactive ]]; then
     # Save original zle-line-init if it exists
     if (( ${+functions[zle-line-init]} )); then
-        functions[_z_skk_orig_line_init]="${functions[zle-line-init]}"
+        functions[_z-skk-orig-line-init]="${functions[zle-line-init]}"
     fi
 
     # Register our line-init

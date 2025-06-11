@@ -1,6 +1,90 @@
 #!/usr/bin/env zsh
 # Standardized error handling for z-skk
 
+# Error log level
+typeset -g Z_SKK_ERROR_LEVEL="${Z_SKK_ERROR_LEVEL:-warn}"
+
+# Log an error message
+_z-skk-log-error() {
+    local level="$1"
+    local message="$2"
+
+    case "$level" in
+        error)
+            print "z-skk: ERROR: $message" >&2
+            ;;
+        warn)
+            [[ "$Z_SKK_ERROR_LEVEL" == "warn" || "$Z_SKK_ERROR_LEVEL" == "info" ]] && \
+                print "z-skk: WARN: $message" >&2
+            ;;
+        info)
+            [[ "$Z_SKK_ERROR_LEVEL" == "info" ]] && \
+                print "z-skk: INFO: $message" >&2
+            ;;
+    esac
+}
+
+# Safe source a file with error handling
+z-skk-safe-source() {
+    local file="$1"
+
+    if [[ ! -f "$file" ]]; then
+        _z-skk-log-error "warn" "File not found: $file"
+        return 1
+    fi
+
+    if [[ ! -r "$file" ]]; then
+        _z-skk-log-error "error" "Cannot read file: $file"
+        return 1
+    fi
+
+    source "$file" || {
+        _z-skk-log-error "error" "Failed to source: $file"
+        return 1
+    }
+
+    return 0
+}
+
+# Safe ZLE operation
+z-skk-safe-zle() {
+    local widget="$1"
+    shift
+
+    # Check if we're in ZLE context
+    if [[ -z "$WIDGET" ]]; then
+        _z-skk-log-error "warn" "ZLE operation outside widget context: $widget"
+        return 1
+    fi
+
+    # Check if widget exists
+    if ! (( ${+widgets[$widget]} )); then
+        _z-skk-log-error "error" "Widget not found: $widget"
+        return 1
+    fi
+
+    zle "$widget" "$@" || {
+        _z-skk-log-error "error" "ZLE operation failed: $widget"
+        return 1
+    }
+
+    return 0
+}
+
+# Validate input parameters
+z-skk-validate-params() {
+    local param_count=$1
+    local actual_count=$2
+    local function_name=$3
+
+    if [[ $actual_count -lt $param_count ]]; then
+        _z-skk-log-error "error" "$function_name: Expected at least $param_count parameters, got $actual_count"
+        return 1
+    fi
+
+    return 0
+}
+
 # Error recovery strategies
 typeset -gA Z_SKK_ERROR_RECOVERY=(
     [conversion]="z-skk-reset core:1 romaji:1 display:1"
@@ -149,4 +233,33 @@ z-skk-critical() {
     fi
 
     return $result
+}
+
+# Reset to safe state on error
+z-skk-error-reset() {
+    local context="${1:-unknown}"
+
+    _z-skk-log-error "warn" "Resetting due to error in: $context"
+
+    # Reset all state using reset.zsh
+    if (( ${+functions[z-skk-reset]} )); then
+        z-skk-reset all
+    else
+        # Fallback if reset.zsh not available
+        Z_SKK_BUFFER=""
+        Z_SKK_CONVERTING=0
+        Z_SKK_CANDIDATES=()
+        Z_SKK_CANDIDATE_INDEX=0
+        [[ -v Z_SKK_ROMAJI_BUFFER ]] && Z_SKK_ROMAJI_BUFFER=""
+    fi
+
+    # Switch to ASCII mode (safest)
+    Z_SKK_MODE="ascii"
+
+    # Update display if possible
+    if (( ${+functions[z-skk-update-display]} )); then
+        z-skk-update-display
+    fi
+
+    return 0
 }

@@ -2,6 +2,8 @@
 # Dictionary file I/O for z-skk
 
 # Dictionary file paths
+# Note: SKK_JISYO_PATH and SKK_SYSTEM_JISYO_PATH are external environment variables
+# that users can set to customize dictionary locations
 typeset -g Z_SKK_USER_JISYO_PATH="${SKK_JISYO_PATH:-${HOME}/.skk-jisyo}"
 typeset -g Z_SKK_SYSTEM_JISYO_PATH="${SKK_SYSTEM_JISYO_PATH:-}"
 

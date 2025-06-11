@@ -22,8 +22,14 @@ z-skk-set-mode() {
                 ;;
         esac
 
+        local old_mode="$Z_SKK_MODE"
         z-skk-reset-state
         Z_SKK_MODE="$new_mode"
+
+        # Emit mode change event
+        if (( ${+functions[z-skk-emit]} )); then
+            z-skk-emit mode:changed "$old_mode" "$new_mode"
+        fi
 
         # Mode-specific initialization
         case "$new_mode" in
