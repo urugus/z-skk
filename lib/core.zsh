@@ -38,7 +38,11 @@ z-skk-reset-state() {
 typeset -gA Z_SKK_MODULES=(
     # Required modules (loading failure is fatal)
     [error]="required"
+    [error-handling]="required"
+    [reset]="required"
+    [conversion-tables]="required"
     [utils]="required"
+    [command-dispatch]="optional"
     [conversion]="required"
     [dictionary-data]="required"
     [dictionary]="required"
@@ -57,7 +61,8 @@ typeset -gA Z_SKK_MODULES=(
 
 # Module loading order (important for dependencies)
 typeset -ga Z_SKK_MODULE_ORDER=(
-    error utils conversion dictionary-data dictionary
+    error error-handling reset conversion-tables utils
+    command-dispatch conversion dictionary-data dictionary
     dictionary-io registration okurigana input-modes
     special-keys modes display input keybindings
 )

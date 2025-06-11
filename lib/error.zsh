@@ -86,38 +86,68 @@ z-skk-with-error-handling() {
     return 0
 }
 
-# Standard error handling wrapper with recovery
+# Legacy error handling wrapper - delegates to new system if available
 # Usage: z-skk-safe-operation "operation_name" command args...
 z-skk-safe-operation() {
-    local operation_name="$1"
-    shift
+    # Delegate to new error handling if available
+    if (( ${+Z_SKK_ERROR_RECOVERY} )); then
+        # Use new standardized error handling
+        local operation_name="$1"
+        shift
 
-    {
-        "$@"
-    } always {
-        if [[ $? -ne 0 ]]; then
-            _z-skk-log-error "warn" "Error during $operation_name"
-            # Attempt recovery based on operation type
-            case "$operation_name" in
-                conversion*)
-                    z-skk-cancel-conversion
-                    ;;
-                registration*)
-                    z-skk-cancel-registration
-                    ;;
-                display*)
-                    # Safe to ignore display errors
-                    ;;
-                *)
-                    # Generic recovery
+        local exit_code
+        {
+            "$@"
+            exit_code=$?
+        } always {
+            if [[ $exit_code -ne 0 ]]; then
+                _z-skk-log-error "warn" "Error during $operation_name"
+
+                # Execute recovery strategy if defined
+                local recovery="${Z_SKK_ERROR_RECOVERY[$operation_name]:-}"
+                if [[ -n "$recovery" ]]; then
+                    eval "$recovery" 2>/dev/null || true
+                else
+                    # Default recovery
+                    z-skk-reset core:1 2>/dev/null || \
                     z-skk-unified-reset "basic" 2>/dev/null || true
-                    ;;
-            esac
-            return 1
-        fi
-    }
+                fi
 
-    return 0
+                return 1
+            fi
+        }
+        return 0
+    else
+        # Fallback to original implementation
+        local operation_name="$1"
+        shift
+
+        {
+            "$@"
+        } always {
+            if [[ $? -ne 0 ]]; then
+                _z-skk-log-error "warn" "Error during $operation_name"
+                # Attempt recovery based on operation type
+                case "$operation_name" in
+                    conversion*)
+                        z-skk-cancel-conversion
+                        ;;
+                    registration*)
+                        z-skk-cancel-registration
+                        ;;
+                    display*)
+                        # Safe to ignore display errors
+                        ;;
+                    *)
+                        # Generic recovery
+                        z-skk-unified-reset "basic" 2>/dev/null || true
+                        ;;
+                esac
+                return 1
+            fi
+        }
+        return 0
+    fi
 }
 
 # Validate input parameters

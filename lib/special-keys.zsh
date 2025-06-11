@@ -32,115 +32,23 @@ z-skk-convert-previous-to-katakana() {
 # Convert a single hiragana character to katakana
 z-skk-hiragana-to-katakana() {
     local hiragana="$1"
-    local katakana=""
 
-    # Hiragana to Katakana conversion table
-    case "$hiragana" in
-        # あ行
-        あ) katakana="ア" ;;
-        い) katakana="イ" ;;
-        う) katakana="ウ" ;;
-        え) katakana="エ" ;;
-        お) katakana="オ" ;;
-        # か行
-        か) katakana="カ" ;;
-        き) katakana="キ" ;;
-        く) katakana="ク" ;;
-        け) katakana="ケ" ;;
-        こ) katakana="コ" ;;
-        # が行
-        が) katakana="ガ" ;;
-        ぎ) katakana="ギ" ;;
-        ぐ) katakana="グ" ;;
-        げ) katakana="ゲ" ;;
-        ご) katakana="ゴ" ;;
-        # さ行
-        さ) katakana="サ" ;;
-        し) katakana="シ" ;;
-        す) katakana="ス" ;;
-        せ) katakana="セ" ;;
-        そ) katakana="ソ" ;;
-        # ざ行
-        ざ) katakana="ザ" ;;
-        じ) katakana="ジ" ;;
-        ず) katakana="ズ" ;;
-        ぜ) katakana="ゼ" ;;
-        ぞ) katakana="ゾ" ;;
-        # た行
-        た) katakana="タ" ;;
-        ち) katakana="チ" ;;
-        つ) katakana="ツ" ;;
-        て) katakana="テ" ;;
-        と) katakana="ト" ;;
-        # だ行
-        だ) katakana="ダ" ;;
-        ぢ) katakana="ヂ" ;;
-        づ) katakana="ヅ" ;;
-        で) katakana="デ" ;;
-        ど) katakana="ド" ;;
-        # な行
-        な) katakana="ナ" ;;
-        に) katakana="ニ" ;;
-        ぬ) katakana="ヌ" ;;
-        ね) katakana="ネ" ;;
-        の) katakana="ノ" ;;
-        # は行
-        は) katakana="ハ" ;;
-        ひ) katakana="ヒ" ;;
-        ふ) katakana="フ" ;;
-        へ) katakana="ヘ" ;;
-        ほ) katakana="ホ" ;;
-        # ば行
-        ば) katakana="バ" ;;
-        び) katakana="ビ" ;;
-        ぶ) katakana="ブ" ;;
-        べ) katakana="ベ" ;;
-        ぼ) katakana="ボ" ;;
-        # ぱ行
-        ぱ) katakana="パ" ;;
-        ぴ) katakana="ピ" ;;
-        ぷ) katakana="プ" ;;
-        ぺ) katakana="ペ" ;;
-        ぽ) katakana="ポ" ;;
-        # ま行
-        ま) katakana="マ" ;;
-        み) katakana="ミ" ;;
-        む) katakana="ム" ;;
-        め) katakana="メ" ;;
-        も) katakana="モ" ;;
-        # や行
-        や) katakana="ヤ" ;;
-        ゆ) katakana="ユ" ;;
-        よ) katakana="ヨ" ;;
-        # ら行
-        ら) katakana="ラ" ;;
-        り) katakana="リ" ;;
-        る) katakana="ル" ;;
-        れ) katakana="レ" ;;
-        ろ) katakana="ロ" ;;
-        # わ行
-        わ) katakana="ワ" ;;
-        ゐ) katakana="ヰ" ;;
-        ゑ) katakana="ヱ" ;;
-        を) katakana="ヲ" ;;
-        ん) katakana="ン" ;;
-        # 小文字
-        ぁ) katakana="ァ" ;;
-        ぃ) katakana="ィ" ;;
-        ぅ) katakana="ゥ" ;;
-        ぇ) katakana="ェ" ;;
-        ぉ) katakana="ォ" ;;
-        ゃ) katakana="ャ" ;;
-        ゅ) katakana="ュ" ;;
-        ょ) katakana="ョ" ;;
-        ゎ) katakana="ヮ" ;;
-        っ) katakana="ッ" ;;
-        # その他
-        ー) katakana="ー" ;;
-        *) katakana="" ;;
-    esac
-
-    echo "$katakana"
+    # Use table-based conversion if available
+    if (( ${+Z_SKK_HIRAGANA_TO_KATAKANA} )); then
+        echo "${Z_SKK_HIRAGANA_TO_KATAKANA[$hiragana]:-}"
+    else
+        # Fallback to case statement if table not loaded
+        local katakana=""
+        case "$hiragana" in
+            あ) katakana="ア" ;;
+            い) katakana="イ" ;;
+            う) katakana="ウ" ;;
+            え) katakana="エ" ;;
+            お) katakana="オ" ;;
+            *) katakana="" ;;
+        esac
+        echo "$katakana"
+    fi
 }
 
 # Insert today's date (@ key)
@@ -243,21 +151,23 @@ z-skk-cancel-code-input() {
     Z_SKK_CODE_BUFFER=""
 }
 
-# Convert JIS code to character (simplified version)
+# Convert JIS code to character
 z-skk-jis-to-char() {
     local code="$1"
 
-    # Basic JIS code conversion (simplified)
-    # In a real implementation, this would use iconv or similar
-    case "$code" in
-        # Some common JIS codes
-        "3042") echo "あ" ;;
-        "30a2") echo "ア" ;;
-        "6f22") echo "漢" ;;
-        "5b57") echo "字" ;;
-        # Add more as needed
-        *) echo "" ;;
-    esac
+    # Use table-based conversion if available
+    if (( ${+Z_SKK_JIS_TO_CHAR} )); then
+        echo "${Z_SKK_JIS_TO_CHAR[$code]:-}"
+    else
+        # Fallback to basic conversion
+        case "$code" in
+            "3042") echo "あ" ;;
+            "30a2") echo "ア" ;;
+            "6f22") echo "漢" ;;
+            "5b57") echo "字" ;;
+            *) echo "" ;;
+        esac
+    fi
 }
 
 # Suffix input mode (> key)

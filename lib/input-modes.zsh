@@ -64,121 +64,26 @@ typeset -gA Z_SKK_ROMAJI_TO_KATAKANA=(
     [n]="ン" [nn]="ン"
 )
 
-# ASCII to Zenkaku (full-width) conversion - simplified version
-# We'll use a function instead of a complex associative array
+# ASCII to Zenkaku (full-width) conversion
 z-skk-convert-to-zenkaku() {
     local char="$1"
-    local zenkaku=""
 
-    case "$char" in
-        # Numbers
-        0) zenkaku="０" ;;
-        1) zenkaku="１" ;;
-        2) zenkaku="２" ;;
-        3) zenkaku="３" ;;
-        4) zenkaku="４" ;;
-        5) zenkaku="５" ;;
-        6) zenkaku="６" ;;
-        7) zenkaku="７" ;;
-        8) zenkaku="８" ;;
-        9) zenkaku="９" ;;
-
-        # Uppercase letters
-        A) zenkaku="Ａ" ;;
-        B) zenkaku="Ｂ" ;;
-        C) zenkaku="Ｃ" ;;
-        D) zenkaku="Ｄ" ;;
-        E) zenkaku="Ｅ" ;;
-        F) zenkaku="Ｆ" ;;
-        G) zenkaku="Ｇ" ;;
-        H) zenkaku="Ｈ" ;;
-        I) zenkaku="Ｉ" ;;
-        J) zenkaku="Ｊ" ;;
-        K) zenkaku="Ｋ" ;;
-        L) zenkaku="Ｌ" ;;
-        M) zenkaku="Ｍ" ;;
-        N) zenkaku="Ｎ" ;;
-        O) zenkaku="Ｏ" ;;
-        P) zenkaku="Ｐ" ;;
-        Q) zenkaku="Ｑ" ;;
-        R) zenkaku="Ｒ" ;;
-        S) zenkaku="Ｓ" ;;
-        T) zenkaku="Ｔ" ;;
-        U) zenkaku="Ｕ" ;;
-        V) zenkaku="Ｖ" ;;
-        W) zenkaku="Ｗ" ;;
-        X) zenkaku="Ｘ" ;;
-        Y) zenkaku="Ｙ" ;;
-        Z) zenkaku="Ｚ" ;;
-
-        # Lowercase letters
-        a) zenkaku="ａ" ;;
-        b) zenkaku="ｂ" ;;
-        c) zenkaku="ｃ" ;;
-        d) zenkaku="ｄ" ;;
-        e) zenkaku="ｅ" ;;
-        f) zenkaku="ｆ" ;;
-        g) zenkaku="ｇ" ;;
-        h) zenkaku="ｈ" ;;
-        i) zenkaku="ｉ" ;;
-        j) zenkaku="ｊ" ;;
-        k) zenkaku="ｋ" ;;
-        l) zenkaku="ｌ" ;;
-        m) zenkaku="ｍ" ;;
-        n) zenkaku="ｎ" ;;
-        o) zenkaku="ｏ" ;;
-        p) zenkaku="ｐ" ;;
-        q) zenkaku="ｑ" ;;
-        r) zenkaku="ｒ" ;;
-        s) zenkaku="ｓ" ;;
-        t) zenkaku="ｔ" ;;
-        u) zenkaku="ｕ" ;;
-        v) zenkaku="ｖ" ;;
-        w) zenkaku="ｗ" ;;
-        x) zenkaku="ｘ" ;;
-        y) zenkaku="ｙ" ;;
-        z) zenkaku="ｚ" ;;
-
-        # Special characters
-        " ") zenkaku="　" ;;
-        "!") zenkaku="！" ;;
-        '"') zenkaku="＂" ;;
-        "#") zenkaku="＃" ;;
-        "$") zenkaku="＄" ;;
-        "%") zenkaku="％" ;;
-        "&") zenkaku="＆" ;;
-        "'") zenkaku="＇" ;;
-        "(") zenkaku="（" ;;
-        ")") zenkaku="）" ;;
-        "*") zenkaku="＊" ;;
-        "+") zenkaku="＋" ;;
-        ",") zenkaku="，" ;;
-        "-") zenkaku="－" ;;
-        ".") zenkaku="．" ;;
-        "/") zenkaku="／" ;;
-        ":") zenkaku="：" ;;
-        ";") zenkaku="；" ;;
-        "<") zenkaku="＜" ;;
-        "=") zenkaku="＝" ;;
-        ">") zenkaku="＞" ;;
-        "?") zenkaku="？" ;;
-        "@") zenkaku="＠" ;;
-        "[") zenkaku="［" ;;
-        "\\") zenkaku="＼" ;;
-        "]") zenkaku="］" ;;
-        "^") zenkaku="＾" ;;
-        "_") zenkaku="＿" ;;
-        '`') zenkaku="｀" ;;
-        "{") zenkaku="｛" ;;
-        "|") zenkaku="｜" ;;
-        "}") zenkaku="｝" ;;
-        "~") zenkaku="～" ;;
-
-        # Default: return as-is
-        *) zenkaku="$char" ;;
-    esac
-
-    echo "$zenkaku"
+    # Use table-based conversion if available
+    if (( ${+Z_SKK_ASCII_TO_ZENKAKU} )); then
+        echo "${Z_SKK_ASCII_TO_ZENKAKU[$char]:-$char}"
+    else
+        # Fallback to case statement if table not loaded
+        local zenkaku=""
+        case "$char" in
+            0) zenkaku="０" ;;
+            1) zenkaku="１" ;;
+            A) zenkaku="Ａ" ;;
+            a) zenkaku="ａ" ;;
+            " ") zenkaku="　" ;;
+            *) zenkaku="$char" ;;
+        esac
+        echo "$zenkaku"
+    fi
 }
 
 # Abbrev mode state
