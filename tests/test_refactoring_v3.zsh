@@ -77,8 +77,9 @@ test_error_handling() {
     assert_equals "Safe op success" "0" "$result"
 
     # Test safe operation with failure
-    # Set up recovery table for test
-    typeset -gA Z_SKK_ERROR_RECOVERY=([test]=":")
+    # Set up recovery table for test - ensure clean state
+    typeset -gA Z_SKK_ERROR_RECOVERY
+    Z_SKK_ERROR_RECOVERY[test]=":"
     z-skk-safe-operation "test" false
     result=$?
     assert_equals "Safe op failure" "1" "$result"
@@ -126,7 +127,8 @@ test_hiragana_commands() {
     assert_equals "l -> ascii" "z-skk-ascii-mode" "${Z_SKK_HIRAGANA_COMMANDS[l]}"
     assert_equals "q -> katakana" "z-skk-katakana-mode" "${Z_SKK_HIRAGANA_COMMANDS[q]}"
     assert_equals "X -> convert" "z-skk-convert-previous-to-katakana" "${Z_SKK_HIRAGANA_COMMANDS[X]}"
-    assert_equals "@ -> date" "z-skk-insert-date" "${Z_SKK_HIRAGANA_COMMANDS['@']}"
+    local at_key="@"
+    assert_equals "@ -> date" "z-skk-insert-date" "${Z_SKK_HIRAGANA_COMMANDS[$at_key]}"
 }
 
 # Test reset aliases

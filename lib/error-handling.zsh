@@ -18,8 +18,7 @@ z-skk-safe-operation() {
     local operation_name="$1"
     shift
 
-    local result
-    local exit_code
+    local exit_code=0
 
     # Execute the operation
     {
@@ -39,12 +38,10 @@ z-skk-safe-operation() {
                 # Default recovery
                 z-skk-reset core:1 2>/dev/null || true
             fi
-
-            return 1
         fi
     }
 
-    return 0
+    return $exit_code
 }
 
 # Safe execution with return value
