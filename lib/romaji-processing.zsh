@@ -106,5 +106,4 @@ z-skk-process-romaji-input() {
     fi
 }
 
-# Initialize on module load
-_z-skk-build-romaji-prefix-cache
+# Note: Cache initialization is done on first use in z-skk-is-partial-romaji
