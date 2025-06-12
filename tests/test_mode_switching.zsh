@@ -56,9 +56,9 @@ assert_equals "Mode switch clears romaji buffer" "" "$Z_SKK_ROMAJI_BUFFER"
 assert_equals "Mode switch clears main buffer" "" "$Z_SKK_BUFFER"
 
 # Test mode display names
-assert "[[ -n \${Z_SKK_MODES[hiragana]} ]]" "Mode display names are defined"
-assert_equals "Hiragana mode display" "かな" "${Z_SKK_MODES[hiragana]}"
-assert_equals "ASCII mode display" "英数" "${Z_SKK_MODES[ascii]}"
+assert "[[ -n \${Z_SKK_MODE_NAMES[hiragana]} ]]" "Mode display names are defined"
+assert_equals "Hiragana mode display" "かな" "${Z_SKK_MODE_NAMES[hiragana]}"
+assert_equals "ASCII mode display" "英数" "${Z_SKK_MODE_NAMES[ascii]}"
 
 # Print summary and exit
 print_test_summary

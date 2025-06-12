@@ -3,6 +3,7 @@
 
 # Track loaded optional modules
 typeset -gA Z_SKK_LOADED_MODULES=()
+typeset -gA Z_SKK_LOADING_MODULES=()
 
 # Lazy load a module
 # Usage: z-skk-lazy-load <module_name>
@@ -14,18 +15,30 @@ z-skk-lazy-load() {
         return 0
     fi
 
+    # Prevent infinite recursion
+    if [[ -n "${Z_SKK_LOADING_MODULES[$module]}" ]]; then
+        _z-skk-log-error "error" "Circular dependency detected: $module"
+        return 1
+    fi
+
+    # Mark as loading
+    typeset -g Z_SKK_LOADING_MODULES[$module]=1
+
     # Load the module
     local module_file="${Z_SKK_DIR}/lib/${module}.zsh"
     if [[ -f "$module_file" ]]; then
         if z-skk-safe-source "$module_file"; then
             Z_SKK_LOADED_MODULES[$module]=1
+            unset "Z_SKK_LOADING_MODULES[$module]"
             _z-skk-log-error "info" "Lazy loaded module: $module"
             return 0
         else
+            unset "Z_SKK_LOADING_MODULES[$module]"
             _z-skk-log-error "error" "Failed to lazy load module: $module"
             return 1
         fi
     else
+        unset "Z_SKK_LOADING_MODULES[$module]"
         _z-skk-log-error "warn" "Module not found for lazy loading: $module"
         return 1
     fi
@@ -35,12 +48,20 @@ z-skk-lazy-load() {
 # These will load the actual module when first called
 
 # Dictionary I/O functions
-z-skk-load-dictionary() {
-    z-skk-lazy-load "dictionary-io" && z-skk-load-dictionary "$@"
+z-skk-load-dictionary-file() {
+    z-skk-lazy-load "dictionary-io" && z-skk-load-dictionary-file "$@"
 }
 
-z-skk-save-dictionary() {
-    z-skk-lazy-load "dictionary-io" && z-skk-save-dictionary "$@"
+z-skk-save-user-dictionary() {
+    z-skk-lazy-load "dictionary-io" && z-skk-save-user-dictionary "$@"
+}
+
+z-skk-add-user-entry() {
+    z-skk-lazy-load "dictionary-io" && z-skk-add-user-entry "$@"
+}
+
+z-skk-init-dictionary-loading() {
+    z-skk-lazy-load "dictionary-io" && z-skk-init-dictionary-loading "$@"
 }
 
 # Registration functions
@@ -48,8 +69,8 @@ z-skk-start-registration() {
     z-skk-lazy-load "registration" && z-skk-start-registration "$@"
 }
 
-z-skk-register-word() {
-    z-skk-lazy-load "registration" && z-skk-register-word "$@"
+z-skk-confirm-registration() {
+    z-skk-lazy-load "registration" && z-skk-confirm-registration "$@"
 }
 
 z-skk-cancel-registration() {

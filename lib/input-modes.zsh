@@ -13,32 +13,25 @@ typeset -gA Z_SKK_MODE_NAMES=(
 # Set the current input mode
 z-skk-set-mode() {
     local mode="$1"
-    
+
     # Validate mode
     if [[ -z "${Z_SKK_MODE_NAMES[$mode]}" ]]; then
         _z-skk-log-error "warn" "Invalid mode: $mode"
         return 1
     fi
-    
+
     # Reset state when changing modes
     if [[ "$mode" != "$Z_SKK_MODE" ]]; then
         z-skk-reset "buffer" "candidates" "romaji"
     fi
-    
+
     Z_SKK_MODE="$mode"
-    
+
     # Update RPROMPT if enabled
     z-skk-update-mode-display
 }
 
-# Toggle between hiragana and katakana modes
-z-skk-toggle-kana() {
-    if [[ "$Z_SKK_MODE" == "hiragana" ]]; then
-        z-skk-set-mode "katakana"
-    elif [[ "$Z_SKK_MODE" == "katakana" ]]; then
-        z-skk-set-mode "hiragana"
-    fi
-}
+# Note: z-skk-toggle-kana is defined in modes.zsh
 
 # Katakana conversion table
 typeset -gA Z_SKK_ROMAJI_TO_KATAKANA=(
@@ -120,7 +113,7 @@ z-skk-deactivate-abbrev() {
 # Process abbrev input
 z-skk-process-abbrev-input() {
     local key="$1"
-    
+
     # Space triggers conversion
     if [[ "$key" == " " ]] && [[ -n "$Z_SKK_ABBREV_BUFFER" ]]; then
         # For now, just return the buffer as-is
@@ -129,7 +122,7 @@ z-skk-process-abbrev-input() {
         z-skk-deactivate-abbrev
         return 0
     fi
-    
+
     # Add to buffer
     Z_SKK_ABBREV_BUFFER+="$key"
     LBUFFER+="$key"
@@ -158,14 +151,14 @@ z-skk-update-mode-display() {
                 Z_SKK_MODE_INDICATOR=""
                 ;;
         esac
-        
+
         # Update RPROMPT
         if [[ -n "$Z_SKK_MODE_INDICATOR" ]]; then
             RPROMPT="${Z_SKK_MODE_INDICATOR}${Z_SKK_ORIGINAL_RPROMPT}"
         else
             RPROMPT="$Z_SKK_ORIGINAL_RPROMPT"
         fi
-        
+
         # Force prompt redraw
         zle && zle reset-prompt
     fi
@@ -193,10 +186,10 @@ z-skk-handle-zenkaku-special() {
 # Process zenkaku input
 z-skk-process-zenkaku-input() {
     local key="$1"
-    
+
     # Convert to zenkaku and insert
     local zenkaku=$(z-skk-convert-to-zenkaku "$key")
-    
+
     if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
         Z_SKK_BUFFER+="$zenkaku"
     else

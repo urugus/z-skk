@@ -85,8 +85,30 @@ z-skk-load-dictionary-file() {
                 candidates="${parsed_array[2]}"
                 # Add to dictionary
                 if [[ -n "${Z_SKK_DICTIONARY[$reading]}" ]]; then
-                    # Merge with existing entries
-                    Z_SKK_DICTIONARY[$reading]="${Z_SKK_DICTIONARY[$reading]}/${candidates}"
+                    # Merge with existing entries, avoiding duplicates
+                    local existing="${Z_SKK_DICTIONARY[$reading]}"
+                    local -a existing_candidates=("${(@s:/:)existing}")
+                    local -a new_candidates=("${(@s:/:)candidates}")
+                    local -A seen_candidates=()
+
+                    # Mark existing candidates as seen
+                    for cand in "${existing_candidates[@]}"; do
+                        # Extract the base word (before annotation)
+                        local base_word="${cand%%[;:]*}"
+                        seen_candidates[$base_word]=1
+                    done
+
+                    # Add only new candidates
+                    local merged="$existing"
+                    for cand in "${new_candidates[@]}"; do
+                        local base_word="${cand%%[;:]*}"
+                        if [[ -z "${seen_candidates[$base_word]}" ]]; then
+                            merged="${merged}/${cand}"
+                            seen_candidates[$base_word]=1
+                        fi
+                    done
+
+                    Z_SKK_DICTIONARY[$reading]="$merged"
                 else
                     Z_SKK_DICTIONARY[$reading]="$candidates"
                 fi
@@ -180,8 +202,16 @@ z-skk-add-user-entry() {
 
     # Add to runtime dictionary
     if [[ -n "${Z_SKK_USER_DICTIONARY[$reading]}" ]]; then
-        # Check if already exists
-        if [[ "${Z_SKK_USER_DICTIONARY[$reading]}" != *"$candidate"* ]]; then
+        # Check if exact candidate already exists
+        local -a existing_candidates=("${(@s:/:)Z_SKK_USER_DICTIONARY[$reading]}")
+        local found=0
+        for cand in "${existing_candidates[@]}"; do
+            if [[ "$cand" == "$candidate" ]]; then
+                found=1
+                break
+            fi
+        done
+        if [[ $found -eq 0 ]]; then
             Z_SKK_USER_DICTIONARY[$reading]="${candidate}/${Z_SKK_USER_DICTIONARY[$reading]}"
         fi
     else
@@ -190,7 +220,16 @@ z-skk-add-user-entry() {
 
     # Also add to main dictionary for immediate use
     if [[ -n "${Z_SKK_DICTIONARY[$reading]}" ]]; then
-        if [[ "${Z_SKK_DICTIONARY[$reading]}" != *"$candidate"* ]]; then
+        # Check if exact candidate already exists
+        local -a existing_candidates=("${(@s:/:)Z_SKK_DICTIONARY[$reading]}")
+        local found=0
+        for cand in "${existing_candidates[@]}"; do
+            if [[ "$cand" == "$candidate" ]]; then
+                found=1
+                break
+            fi
+        done
+        if [[ $found -eq 0 ]]; then
             Z_SKK_DICTIONARY[$reading]="${candidate}/${Z_SKK_DICTIONARY[$reading]}"
         fi
     else
