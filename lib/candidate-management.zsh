@@ -46,8 +46,8 @@ _z-skk-prepare-candidates() {
 
 # Switch to candidate selection mode
 _z-skk-switch-to-selection-mode() {
-    Z_SKK_CANDIDATE_INDEX=0
-    Z_SKK_CONVERTING=2  # 2 means selecting candidates
+    z-skk-set-candidate-index 0
+    z-skk-start-candidate-selection  # 2 means selecting candidates
 
     # Emit event
     if (( ${+functions[z-skk-emit]} )); then
@@ -61,19 +61,19 @@ _z-skk-switch-to-selection-mode() {
 _z-skk-navigate-candidate() {
     local direction="$1"  # "next" or "previous"
 
-    if [[ $Z_SKK_CONVERTING -eq 2 && ${#Z_SKK_CANDIDATES[@]} -gt 0 ]]; then
+    if z-skk-is-selecting-candidate && [[ ${#Z_SKK_CANDIDATES[@]} -gt 0 ]]; then
         # Clear current display
         local current_candidate="${Z_SKK_CANDIDATES[$((Z_SKK_CANDIDATE_INDEX + 1))]}"
         z-skk-clear-marker "▼" "$current_candidate"
 
         # Move index based on direction
         if [[ "$direction" == "next" ]]; then
-            Z_SKK_CANDIDATE_INDEX=$(( (Z_SKK_CANDIDATE_INDEX + 1) % ${#Z_SKK_CANDIDATES[@]} ))
+            z-skk-set-candidate-index $(( (Z_SKK_CANDIDATE_INDEX + 1) % ${#Z_SKK_CANDIDATES[@]} ))
         else  # previous
             if [[ $Z_SKK_CANDIDATE_INDEX -eq 0 ]]; then
-                Z_SKK_CANDIDATE_INDEX=$(( ${#Z_SKK_CANDIDATES[@]} - 1 ))
+                z-skk-set-candidate-index $(( ${#Z_SKK_CANDIDATES[@]} - 1 ))
             else
-                Z_SKK_CANDIDATE_INDEX=$(( Z_SKK_CANDIDATE_INDEX - 1 ))
+                z-skk-set-candidate-index $(( Z_SKK_CANDIDATE_INDEX - 1 ))
             fi
         fi
 

@@ -3,31 +3,8 @@
 
 # Note: Z_SKK_MODE_NAMES is defined in modes.zsh
 
-# Set the current input mode
-z-skk-set-mode() {
-    local mode="$1"
-
-    # Validate mode
-    if [[ -z "${Z_SKK_MODE_NAMES[$mode]}" ]]; then
-        _z-skk-log-error "warn" "Invalid mode: $mode"
-        return 1
-    fi
-
-    # Reset state when changing modes
-    if [[ "$mode" != "$Z_SKK_MODE" ]]; then
-        z-skk-reset "buffer" "candidates" "romaji"
-        # Also reset abbrev state if leaving abbrev mode
-        if [[ "$Z_SKK_MODE" == "abbrev" ]]; then
-            Z_SKK_ABBREV_BUFFER=""
-            Z_SKK_ABBREV_ACTIVE=0
-        fi
-    fi
-
-    Z_SKK_MODE="$mode"
-
-    # Update RPROMPT if enabled
-    z-skk-update-mode-display
-}
+# Mode setter wrapper (for compatibility)
+# The actual implementation is now in state.zsh
 
 # Note: z-skk-toggle-kana is defined in modes.zsh
 
@@ -123,7 +100,7 @@ z-skk-process-abbrev-input() {
         z-skk-deactivate-abbrev
         # Then start conversion with the saved abbreviation
         Z_SKK_BUFFER="$abbrev"
-        Z_SKK_CONVERTING=1
+        z-skk-set-converting-state 1
         # Update display with conversion marker
         z-skk-update-conversion-display
         return 0
@@ -196,7 +173,7 @@ z-skk-process-zenkaku-input() {
     # Convert to zenkaku and insert
     local zenkaku=$(z-skk-convert-to-zenkaku "$key")
 
-    if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
+    if z-skk-is-pre-converting; then
         Z_SKK_BUFFER+="$zenkaku"
     else
         LBUFFER+="$zenkaku"

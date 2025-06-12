@@ -11,6 +11,14 @@ source "$TEST_DIR/test_utils.zsh"
 # Load the plugin
 source "$PROJECT_DIR/z-skk.plugin.zsh"
 
+# Force load input-modes module for testing
+if (( ${+functions[z-skk-lazy-load-module]} )); then
+    z-skk-lazy-load-module "input-modes"
+else
+    # Fallback: source directly
+    source "$PROJECT_DIR/lib/input-modes.zsh"
+fi
+
 # Test katakana mode
 test_katakana_mode() {
     # Reset state

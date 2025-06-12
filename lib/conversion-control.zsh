@@ -49,7 +49,11 @@ z-skk-confirm-candidate() {
         z-skk-clear-marker "▼" "$current_candidate"
 
         # Insert the selected candidate
-        LBUFFER+="$current_candidate"
+        if (( ${+functions[z-skk-display-append]} )); then
+            z-skk-display-append "$current_candidate"
+        else
+            LBUFFER+="$current_candidate"
+        fi
 
         # Emit conversion completed event
         if (( ${+functions[z-skk-emit]} )); then
@@ -76,10 +80,18 @@ z-skk-cancel-conversion() {
 
         # Output buffer content as-is
         if [[ -n "$Z_SKK_BUFFER" ]]; then
-            LBUFFER+="$Z_SKK_BUFFER"
-            # Also output any pending romaji if in pre-conversion
-            if [[ $Z_SKK_CONVERTING -eq 1 && -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
-                LBUFFER+="$Z_SKK_ROMAJI_BUFFER"
+            if (( ${+functions[z-skk-display-append]} )); then
+                z-skk-display-append "$Z_SKK_BUFFER"
+                # Also output any pending romaji if in pre-conversion
+                if [[ $Z_SKK_CONVERTING -eq 1 && -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
+                    z-skk-display-append "$Z_SKK_ROMAJI_BUFFER"
+                fi
+            else
+                LBUFFER+="$Z_SKK_BUFFER"
+                # Also output any pending romaji if in pre-conversion
+                if [[ $Z_SKK_CONVERTING -eq 1 && -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
+                    LBUFFER+="$Z_SKK_ROMAJI_BUFFER"
+                fi
             fi
         fi
 

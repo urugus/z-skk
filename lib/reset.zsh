@@ -44,7 +44,7 @@ z-skk-reset() {
     # Core reset
     if [[ ${components[core]} -eq 1 ]]; then
         Z_SKK_BUFFER=""
-        Z_SKK_CONVERTING=0
+        z-skk-set-converting-state 0 2>/dev/null || Z_SKK_CONVERTING=0
         Z_SKK_CANDIDATES=()
         Z_SKK_CANDIDATE_INDEX=0
     fi
@@ -56,10 +56,17 @@ z-skk-reset() {
 
     # Registration state reset
     if [[ ${components[registration]} -eq 1 ]]; then
-        if (( ${+functions[z-skk-is-registering]} )) && z-skk-is-registering; then
-            Z_SKK_REGISTERING=0
-            Z_SKK_REGISTER_READING=""
-            Z_SKK_REGISTER_CANDIDATE=""
+        if (( ${+functions[z-skk-is-registering]} )); then
+            if z-skk-is-registering; then
+                [[ -v Z_SKK_REGISTERING ]] && Z_SKK_REGISTERING=0
+                [[ -v Z_SKK_REGISTER_READING ]] && Z_SKK_REGISTER_READING=""
+                [[ -v Z_SKK_REGISTER_CANDIDATE ]] && Z_SKK_REGISTER_CANDIDATE=""
+            fi
+        else
+            # Fallback if registration module not loaded
+            [[ -v Z_SKK_REGISTERING ]] && Z_SKK_REGISTERING=0
+            [[ -v Z_SKK_REGISTER_READING ]] && Z_SKK_REGISTER_READING=""
+            [[ -v Z_SKK_REGISTER_CANDIDATE ]] && Z_SKK_REGISTER_CANDIDATE=""
         fi
     fi
 

@@ -20,7 +20,7 @@ z-skk-reset-state() {
     else
         # Fallback if reset.zsh not loaded yet
         Z_SKK_BUFFER=""
-        Z_SKK_CONVERTING=0
+        z-skk-set-converting-state 0 2>/dev/null || Z_SKK_CONVERTING=0
         Z_SKK_CANDIDATES=()
         Z_SKK_CANDIDATE_INDEX=0
         [[ -v Z_SKK_ROMAJI_BUFFER ]] && Z_SKK_ROMAJI_BUFFER=""
@@ -33,6 +33,7 @@ typeset -gA Z_SKK_MODULES=(
     [error-handling]="required"
     [debug]="optional"  # Debug utilities (optional for production)
     [reset]="required"
+    [state]="required"  # Centralized state management
     [conversion-tables]="required"
     [utils]="required"
     [events]="required"     # Event system for loose coupling
@@ -49,6 +50,7 @@ typeset -gA Z_SKK_MODULES=(
     [input]="required"
     [keybindings]="required"
     [display]="optional"
+    [display-api]="required"  # Centralized display API
 
     # Lazy-loaded modules (not loaded at startup)
     [dictionary-io]="lazy"  # Loaded when needed
@@ -67,9 +69,9 @@ typeset -ga Z_SKK_MODULE_ORDER=(
     # Core utilities (minimal dependencies)
     utils events dictionary-data lazy-load
     # Display system (needed by many modules)
-    display
+    display display-api
     # Core systems
-    reset dictionary modes
+    reset state dictionary modes
     # Optional modules
     command-dispatch
     # Conversion modules (split for modularity)

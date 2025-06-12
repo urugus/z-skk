@@ -11,6 +11,14 @@ source "$TEST_DIR/test_utils.zsh"
 # Load the plugin
 source "$PROJECT_DIR/z-skk.plugin.zsh"
 
+# Force load registration module for testing
+if (( ${+functions[z-skk-lazy-load-module]} )); then
+    z-skk-lazy-load-module "registration"
+else
+    # Fallback: source directly
+    source "$PROJECT_DIR/lib/registration.zsh"
+fi
+
 # Mock ZLE functions for testing
 zle() {
     case "$1" in

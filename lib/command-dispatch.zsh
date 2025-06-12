@@ -81,7 +81,7 @@ _z-skk-handle-hiragana-special-key-simple() {
     local key="$1"
 
     if z-skk-dispatch-command "HIRAGANA" "$key"; then
-        zle -R
+        z-skk-safe-redraw
         return 0
     fi
 

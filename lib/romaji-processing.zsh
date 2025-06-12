@@ -101,7 +101,11 @@ z-skk-process-romaji-input() {
                 # Add to conversion buffer instead of direct insert
                 Z_SKK_BUFFER+="$Z_SKK_CONVERTED"
             else
-                LBUFFER+="$Z_SKK_CONVERTED"
+                if (( ${+functions[z-skk-display-append]} )); then
+                    z-skk-display-append "$Z_SKK_CONVERTED"
+                else
+                    LBUFFER+="$Z_SKK_CONVERTED"
+                fi
             fi
 
             # Emit input processed event

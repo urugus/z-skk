@@ -15,49 +15,49 @@ _z-skk-handle-hiragana-special-key() {
         l|L)
             # Switch to ASCII mode
             z-skk-ascii-mode
-            zle -R
+            z-skk-safe-redraw
             return 0
             ;;
         /)
             # Switch to abbrev mode
             z-skk-start-abbrev-mode
-            zle -R
+            z-skk-safe-redraw
             return 0
             ;;
         q)
             # Switch to katakana mode
             z-skk-katakana-mode
-            zle -R
+            z-skk-safe-redraw
             return 0
             ;;
         X)
             # Convert previous character to katakana
             z-skk-convert-previous-to-katakana
-            zle -R
+            z-skk-safe-redraw
             return 0
             ;;
         @)
             # Insert today's date
             z-skk-insert-date
-            zle -R
+            z-skk-safe-redraw
             return 0
             ;;
         ";")
             # Start JIS code input
             z-skk-code-input
-            zle -R
+            z-skk-safe-redraw
             return 0
             ;;
         ">")
             # Start suffix input mode
             z-skk-start-suffix-input
-            zle -R
+            z-skk-safe-redraw
             return 0
             ;;
         "?")
             # Start prefix input mode
             z-skk-start-prefix-input
-            zle -R
+            z-skk-safe-redraw
             return 0
             ;;
     esac
@@ -67,42 +67,41 @@ _z-skk-handle-hiragana-special-key() {
 
 
 
-# Handle input in hiragana mode
-_z-skk-handle-hiragana-input() {
+# Check and handle special input modes
+_z-skk-check-special-input-mode() {
     local key="$1"
 
-    # Check if in special input mode (code input, etc.)
     if (( ${+functions[z-skk-is-special-input-mode]} )); then
         if z-skk-is-special-input-mode; then
             if [[ ${Z_SKK_CODE_INPUT_MODE:-0} -eq 1 ]]; then
                 z-skk-process-code-input "$key"
                 z-skk-safe-redraw
-                return
+                return 0
             fi
             # Handle other special modes in the future
         fi
     fi
+    return 1
+}
 
-    # Check if already in conversion mode
-    if [[ $Z_SKK_CONVERTING -ge 1 ]]; then
-        # Handle input during conversion
-        _z-skk-handle-converting-input "$key"
-        return
-    fi
+# Detect and prepare conversion mode
+_z-skk-detect-conversion-trigger() {
+    local key="$1"
 
-    # Special key handling
-    if _z-skk-handle-hiragana-special-key "$key"; then
-        return
-    fi
-
-    # Check for uppercase (conversion start)
-    local processed_key="$key"
     if [[ "$key" =~ ^[A-Z]$ ]]; then
-        # Start conversion mode
-        Z_SKK_CONVERTING=1
-        Z_SKK_BUFFER=""
-        # Don't set Z_SKK_LAST_INPUT here - it will be set after processing
-        # Convert uppercase to lowercase for romaji processing
+        z-skk-start-pre-conversion
+        return 0
+    fi
+    return 1
+}
+
+# Process normal hiragana input
+_z-skk-process-hiragana-character() {
+    local key="$1"
+    local processed_key="$key"
+
+    # Convert uppercase to lowercase for romaji processing
+    if [[ "$key" =~ ^[A-Z]$ ]]; then
         processed_key="${key:l}"
     fi
 
@@ -113,9 +112,34 @@ _z-skk-handle-hiragana-input() {
     Z_SKK_LAST_INPUT="$key"
 
     # Update display with marker if converting
-    if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
+    if z-skk-is-pre-converting; then
         z-skk-update-conversion-display
     fi
+}
+
+# Handle input in hiragana mode
+_z-skk-handle-hiragana-input() {
+    local key="$1"
+
+    # Check if in special input mode
+    if _z-skk-check-special-input-mode "$key"; then
+        return
+    fi
+
+    # Check if already in conversion mode
+    if z-skk-is-converting; then
+        _z-skk-handle-converting-input "$key"
+        return
+    fi
+
+    # Special key handling
+    if _z-skk-handle-hiragana-special-key "$key"; then
+        return
+    fi
+
+    # Detect conversion trigger and process input
+    _z-skk-detect-conversion-trigger "$key"
+    _z-skk-process-hiragana-character "$key"
 
     # Redraw the line
     z-skk-safe-redraw
@@ -186,7 +210,7 @@ _z-skk-handle-converting-input() {
     local key="$1"
 
     # Handle based on conversion state
-    if [[ $Z_SKK_CONVERTING -eq 2 ]]; then
+    if z-skk-is-selecting-candidate; then
         # In candidate selection mode
         _z-skk-handle-candidate-selection-key "$key"
     else
@@ -229,7 +253,7 @@ _z-skk-should-start-okurigana() {
     if [[ "$key" =~ ^[a-z]$ ]]; then
         local last_input="${Z_SKK_LAST_INPUT:-}"
         if [[ "$last_input" =~ ^[A-Z]$ &&
-              $Z_SKK_CONVERTING -eq 1 &&
+              z-skk-is-pre-converting &&
               -n "$Z_SKK_BUFFER" ]]; then
             # The uppercase should be DURING conversion, not the initial one
             # Check if we have more than one character in the buffer
@@ -242,35 +266,48 @@ _z-skk-should-start-okurigana() {
     return 1
 }
 
-# Process a character during conversion
-_z-skk-process-converting-character() {
+# Handle uppercase during conversion (okurigana marker)
+_z-skk-handle-okurigana-marker() {
     local key="$1"
 
-    # Check for uppercase during conversion - this means okurigana start marker
     if [[ "$key" =~ ^[A-Z]$ ]] && ( (( ! ${+functions[z-skk-is-okurigana-mode]} )) || ! z-skk-is-okurigana-mode ); then
-        # This is the marker for okurigana start
         # Complete any pending romaji conversion first
         z-skk-convert-romaji
         if [[ -n "$Z_SKK_CONVERTED" ]]; then
-            Z_SKK_BUFFER+="$Z_SKK_CONVERTED"
+            z-skk-append-to-buffer "$Z_SKK_CONVERTED"
         fi
-        # Now we can start okurigana mode with the complete prefix
+        # Start okurigana mode with the complete prefix
         z-skk-start-okurigana
-        # Store it but don't process the character
         Z_SKK_LAST_INPUT="$key"
-        # Still need to update display to show the romaji buffer
         z-skk-update-conversion-display
-        return
+        return 0
     fi
+    return 1
+}
 
+# Process character based on current mode
+_z-skk-process-by-mode() {
+    local key="$1"
     local lower_key="${key:l}"
 
-    # Process based on current mode
     if (( ${+functions[z-skk-is-okurigana-mode]} )) && z-skk-is-okurigana-mode; then
         z-skk-process-okurigana "$lower_key"
     else
         z-skk-process-romaji-input "$lower_key"
     fi
+}
+
+# Process a character during conversion
+_z-skk-process-converting-character() {
+    local key="$1"
+
+    # Check for okurigana marker
+    if _z-skk-handle-okurigana-marker "$key"; then
+        return
+    fi
+
+    # Process based on current mode
+    _z-skk-process-by-mode "$key"
 
     # Store last input and update display
     Z_SKK_LAST_INPUT="$key"
@@ -282,7 +319,7 @@ _z-skk-handle-katakana-input() {
     local key="$1"
 
     # Check if already in conversion mode
-    if [[ $Z_SKK_CONVERTING -ge 1 ]]; then
+    if z-skk-is-converting; then
         # Handle input during conversion (same as hiragana)
         _z-skk-handle-converting-input "$key"
         return
@@ -297,8 +334,7 @@ _z-skk-handle-katakana-input() {
     local processed_key="$key"
     if [[ "$key" =~ ^[A-Z]$ ]]; then
         # Start conversion mode
-        Z_SKK_CONVERTING=1
-        Z_SKK_BUFFER=""
+        z-skk-start-pre-conversion
         Z_SKK_LAST_INPUT="$key"
         # Convert uppercase to lowercase for romaji processing
         processed_key="${key:l}"
@@ -308,7 +344,7 @@ _z-skk-handle-katakana-input() {
     z-skk-process-katakana-input "$processed_key"
 
     # Update display with marker if converting
-    if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
+    if z-skk-is-pre-converting; then
         z-skk-update-conversion-display
     fi
 
@@ -343,37 +379,38 @@ _z-skk-handle-abbrev-input() {
     z-skk-safe-redraw
 }
 
+# Mode handler table
+typeset -gA Z_SKK_MODE_HANDLERS=(
+    [ascii]="_z-skk-handle-ascii-input"
+    [hiragana]="_z-skk-handle-hiragana-input"
+    [katakana]="_z-skk-handle-katakana-input"
+    [zenkaku]="_z-skk-handle-zenkaku-input"
+    [abbrev]="_z-skk-handle-abbrev-input"
+)
+
 # Main input dispatcher
 z-skk-handle-input() {
     local key="${1:-$KEYS}"
 
     # Check if in registration mode first
-    if z-skk-is-registering; then
+    if (( ${+functions[z-skk-is-registering]} )) && z-skk-is-registering; then
         z-skk-registration-input "$key"
         z-skk-safe-redraw
         return
     fi
 
-    # Dispatch to appropriate handler based on mode
-    case "$Z_SKK_MODE" in
-        ascii)
-            _z-skk-handle-ascii-input
-            ;;
-        hiragana)
-            _z-skk-handle-hiragana-input "$key"
-            ;;
-        katakana)
-            _z-skk-handle-katakana-input "$key"
-            ;;
-        zenkaku)
-            _z-skk-handle-zenkaku-input "$key"
-            ;;
-        abbrev)
-            _z-skk-handle-abbrev-input "$key"
-            ;;
-        *)
-            # Unknown mode, pass through
-            zle .self-insert
-            ;;
-    esac
+    # Get handler for current mode
+    local handler="${Z_SKK_MODE_HANDLERS[$Z_SKK_MODE]}"
+
+    if [[ -n "$handler" ]] && (( ${+functions[$handler]} )); then
+        # Call mode-specific handler
+        if [[ "$handler" == "_z-skk-handle-ascii-input" ]]; then
+            "$handler"  # ASCII handler doesn't take key argument
+        else
+            "$handler" "$key"
+        fi
+    else
+        # Unknown mode or handler not found, pass through
+        zle .self-insert
+    fi
 }
