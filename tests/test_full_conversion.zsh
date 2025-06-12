@@ -51,7 +51,7 @@ test_full_conversion_flow() {
     # Press Space to start conversion
     _z-skk-handle-converting-input " "
     assert_equals "Moved to candidate selection" "2" "$Z_SKK_CONVERTING"
-    assert "Has candidates" '[[ ${#Z_SKK_CANDIDATES[@]} -gt 0 ]]'
+    assert '[[ ${#Z_SKK_CANDIDATES[@]} -gt 0 ]]' "Has candidates"
     assert_equals "First candidate is 漢字" "漢字" "${Z_SKK_CANDIDATES[1]}"
 }
 

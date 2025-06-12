@@ -58,13 +58,13 @@ EOF
     z-skk-load-dictionary-file "$test_dict"
 
     # Check loaded entries
-    assert "あい loaded" '[[ -n "${Z_SKK_DICTIONARY[あい]}" ]]'
+    assert '[[ -n "${Z_SKK_DICTIONARY[あい]}" ]]' "あい loaded"
     assert_equals "あい candidates" "愛/相" "${Z_SKK_DICTIONARY[あい]}"
 
-    assert "かき loaded" '[[ -n "${Z_SKK_DICTIONARY[かき]}" ]]'
+    assert '[[ -n "${Z_SKK_DICTIONARY[かき]}" ]]' "かき loaded"
     assert_equals "かき candidates" "柿/牡蠣;oyster" "${Z_SKK_DICTIONARY[かき]}"
 
-    assert "さけ loaded" '[[ -n "${Z_SKK_DICTIONARY[さけ]}" ]]'
+    assert '[[ -n "${Z_SKK_DICTIONARY[さけ]}" ]]' "さけ loaded"
     assert_equals "さけ candidates" "酒/鮭" "${Z_SKK_DICTIONARY[さけ]}"
 }
 
@@ -79,13 +79,13 @@ test_save_user_dictionary() {
     z-skk-save-user-dictionary
 
     # Check file exists
-    assert "Dictionary saved" "[[ -f '$SKK_JISYO_PATH' ]]"
+    assert "[[ -f '$SKK_JISYO_PATH' ]]" "Dictionary saved"
 
     # Check content
     local content=$(cat "$SKK_JISYO_PATH")
-    assert "Has header" '[[ "$content" == *"z-skk user dictionary"* ]]'
-    assert "Has てすと" '[[ "$content" == *"てすと /テスト/test/"* ]]'
-    assert "Has ほぞん" '[[ "$content" == *"ほぞん /保存/"* ]]'
+    assert '[[ "$content" == *"z-skk user dictionary"* ]]' "Has header"
+    assert '[[ "$content" == *"てすと /テスト/test/"* ]]' "Has てすと"
+    assert '[[ "$content" == *"ほぞん /保存/"* ]]' "Has ほぞん"
 }
 
 # Test adding user entries
@@ -110,7 +110,7 @@ test_add_user_entry() {
     z-skk-add-user-entry "あたらしい" "新しい"
 
     # Should not duplicate
-    assert "No duplicate" '[[ "${Z_SKK_USER_DICTIONARY[あたらしい]}" != *"新しい/新しい"* ]]'
+    assert '[[ "${Z_SKK_USER_DICTIONARY[あたらしい]}" != *"新しい/新しい"* ]]' "No duplicate"
 }
 
 # Test dictionary initialization
@@ -126,7 +126,7 @@ EOF
     z-skk-init-dictionary-loading
 
     # Check if loaded
-    assert "User dict loaded" '[[ -n "${Z_SKK_DICTIONARY[ゆーざー]}" ]]'
+    assert '[[ -n "${Z_SKK_DICTIONARY[ゆーざー]}" ]]' "User dict loaded"
     assert_equals "User entry" "ユーザー/user" "${Z_SKK_DICTIONARY[ゆーざー]}"
 }
 

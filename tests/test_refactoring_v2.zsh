@@ -61,8 +61,8 @@ test_reset_compatibility() {
 # Test module loading system
 test_module_loading() {
     # Module configuration should exist
-    assert "Module config exists" '[[ -v Z_SKK_MODULES ]]'
-    assert "Module order exists" '[[ -v Z_SKK_MODULE_ORDER ]]'
+    assert '[[ -v Z_SKK_MODULES ]]' "Module config exists"
+    assert '[[ -v Z_SKK_MODULE_ORDER ]]' "Module order exists"
 
     # Check required modules are marked correctly
     assert_equals "error is required" "required" "${Z_SKK_MODULES[error]}"
@@ -70,35 +70,35 @@ test_module_loading() {
     assert_equals "display is optional" "optional" "${Z_SKK_MODULES[display]}"
 
     # Module loading functions should exist
-    assert "Load module function exists" '(( ${+functions[_z-skk-load-module]} ))'
-    assert "Load all modules function exists" '(( ${+functions[_z-skk-load-all-modules]} ))'
+    assert '(( ${+functions[_z-skk-load-module]} ))' "Load module function exists"
+    assert '(( ${+functions[_z-skk-load-all-modules]} ))' "Load all modules function exists"
 }
 
 # Test split converting input functions
 test_split_converting_input() {
     # New functions should exist
-    assert "_z-skk-handle-pre-conversion-input exists" '(( ${+functions[_z-skk-handle-pre-conversion-input]} ))'
-    assert "_z-skk-should-start-okurigana exists" '(( ${+functions[_z-skk-should-start-okurigana]} ))'
-    assert "_z-skk-process-converting-character exists" '(( ${+functions[_z-skk-process-converting-character]} ))'
+    assert '(( ${+functions[_z-skk-handle-pre-conversion-input]} ))' "_z-skk-handle-pre-conversion-input exists"
+    assert '(( ${+functions[_z-skk-should-start-okurigana]} ))' "_z-skk-should-start-okurigana exists"
+    assert '(( ${+functions[_z-skk-process-converting-character]} ))' "_z-skk-process-converting-character exists"
 
     # Test okurigana detection
     Z_SKK_CONVERTING=1
     Z_SKK_BUFFER="おく"  # More than one character
     Z_SKK_LAST_INPUT="R"  # Uppercase during conversion
-    assert "Should detect okurigana" '_z-skk-should-start-okurigana "i"'
+    assert '_z-skk-should-start-okurigana "i"' "Should detect okurigana"
 
     Z_SKK_LAST_INPUT="k"
-    assert "Should not detect okurigana" '! _z-skk-should-start-okurigana "a"'
+    assert '! _z-skk-should-start-okurigana "a"' "Should not detect okurigana"
 }
 
 # Test error handling functions
 test_error_handling() {
     # Safe operation function should exist
-    assert "Safe operation exists" '(( ${+functions[z-skk-safe-operation]} ))'
+    assert '(( ${+functions[z-skk-safe-operation]} ))' "Safe operation exists"
 
     # Test successful operation
     _test_success() { return 0; }
-    assert "Safe operation succeeds" 'z-skk-safe-operation "test" _test_success'
+    assert 'z-skk-safe-operation "test" _test_success' "Safe operation succeeds"
 
     # Test failing operation with recovery
     _test_fail() { return 1; }
@@ -111,7 +111,7 @@ test_error_handling() {
 # Test perform conversion separation
 test_perform_conversion() {
     # New function should exist
-    assert "_z-skk-perform-conversion exists" '(( ${+functions[_z-skk-perform-conversion]} ))'
+    assert '(( ${+functions[_z-skk-perform-conversion]} ))' "_z-skk-perform-conversion exists"
 
     # Test conversion start uses safe operation
     Z_SKK_MODE="hiragana"
@@ -122,7 +122,7 @@ test_perform_conversion() {
     z-skk-start-conversion
 
     # Should have candidates
-    assert "Has candidates after conversion" '[[ ${#Z_SKK_CANDIDATES[@]} -gt 0 ]]'
+    assert '[[ ${#Z_SKK_CANDIDATES[@]} -gt 0 ]]' "Has candidates after conversion"
 }
 
 # Run tests

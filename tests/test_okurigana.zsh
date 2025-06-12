@@ -14,10 +14,10 @@ source "$PROJECT_DIR/z-skk.plugin.zsh"
 # Test okurigana mode detection
 test_okurigana_detection() {
     # Test uppercase followed by lowercase detection
-    assert "Should detect okurigana" 'z-skk-check-okurigana-start "K" "a"'
-    assert "Should detect okurigana" 'z-skk-check-okurigana-start "O" "k"'
-    assert "Should not detect okurigana" '! z-skk-check-okurigana-start "k" "a"'
-    assert "Should not detect okurigana" '! z-skk-check-okurigana-start "K" "A"'
+    assert 'z-skk-check-okurigana-start "K" "a"' "Should detect okurigana"
+    assert 'z-skk-check-okurigana-start "O" "k"' "Should detect okurigana"
+    assert '! z-skk-check-okurigana-start "k" "a"' "Should not detect okurigana"
+    assert '! z-skk-check-okurigana-start "K" "A"' "Should not detect okurigana"
 }
 
 # Test okurigana mode initialization
@@ -102,7 +102,7 @@ test_okurigana_conversion() {
     z-skk-start-conversion
 
     assert_equals "Conversion successful" "2" "$Z_SKK_CONVERTING"
-    assert "Has candidates" '[[ ${#Z_SKK_CANDIDATES[@]} -gt 0 ]]'
+    assert '[[ ${#Z_SKK_CANDIDATES[@]} -gt 0 ]]' "Has candidates"
     assert_equals "First candidate" "送り" "${Z_SKK_CANDIDATES[1]}"
 }
 
@@ -120,7 +120,7 @@ test_okurigana_display() {
     # Update display
     z-skk-update-conversion-display
 
-    assert "Display has marker and asterisk" '[[ "$LBUFFER" == "▽おく*り" ]]'
+    assert '[[ "$LBUFFER" == "▽おく*り" ]]' "Display has marker and asterisk"
 }
 
 # Test okurigana reset

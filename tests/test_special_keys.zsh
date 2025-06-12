@@ -176,22 +176,22 @@ test_special_key_handling() {
     Z_SKK_MODE="hiragana"
 
     # Test X key handling
-    assert "X key handled" '_z-skk-handle-hiragana-special-key "X"'
+    assert '_z-skk-handle-hiragana-special-key "X"' "X key handled"
 
     # Test @ key handling
-    assert "@ key handled" '_z-skk-handle-hiragana-special-key "@"'
+    assert '_z-skk-handle-hiragana-special-key "@"' "@ key handled"
 
     # Test ; key handling
-    assert "; key handled" '_z-skk-handle-hiragana-special-key ";"'
+    assert '_z-skk-handle-hiragana-special-key ";"' "; key handled"
 
     # Test > key handling
-    assert "> key handled" '_z-skk-handle-hiragana-special-key ">"'
+    assert '_z-skk-handle-hiragana-special-key ">"' "> key handled"
 
     # Test ? key handling
-    assert "? key handled" '_z-skk-handle-hiragana-special-key "?"'
+    assert '_z-skk-handle-hiragana-special-key "?"' "? key handled"
 
     # Test non-special key
-    assert "a key not special" '! _z-skk-handle-hiragana-special-key "a"'
+    assert '! _z-skk-handle-hiragana-special-key "a"' "a key not special"
 }
 
 # Run tests

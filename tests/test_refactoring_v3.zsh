@@ -121,7 +121,7 @@ test_command_dispatch() {
 # Test hiragana command dispatch
 test_hiragana_commands() {
     # Ensure command table exists
-    assert "Hiragana commands exist" '[[ -v Z_SKK_HIRAGANA_COMMANDS ]]'
+    assert '[[ -v Z_SKK_HIRAGANA_COMMANDS ]]' "Hiragana commands exist"
 
     # Check key mappings
     assert_equals "l -> ascii" "z-skk-ascii-mode" "${Z_SKK_HIRAGANA_COMMANDS[l]}"

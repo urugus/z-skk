@@ -104,7 +104,7 @@ test_conversion_display_marker() {
     # Update display
     z-skk-update-conversion-display
 
-    assert "Display has ▽ marker" '[[ "$LBUFFER" == *"▽かんじ" ]]'
+    assert '[[ "$LBUFFER" == *"▽かんじ" ]]' "Display has ▽ marker"
 }
 
 # Test C-g cancels conversion

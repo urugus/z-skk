@@ -156,7 +156,7 @@ test_abbrev_input_processing() {
     assert_equals "Conversion started" "1" "$Z_SKK_CONVERTING"
     assert_equals "Buffer has abbrev" "skk" "$Z_SKK_BUFFER"
     # Display should now show conversion marker
-    assert "Display shows conversion marker" '[[ "$LBUFFER" == "▽skk" ]]'
+    assert '[[ "$LBUFFER" == "▽skk" ]]' "Display shows conversion marker"
 }
 
 # Test mode switching from katakana

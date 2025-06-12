@@ -14,10 +14,10 @@ source "$PROJECT_DIR/z-skk.plugin.zsh"
 # Test display utilities
 test_display_utilities() {
     # Test marker functions exist
-    assert "z-skk-clear-marker exists" '(( ${+functions[z-skk-clear-marker]} ))'
-    assert "z-skk-add-marker exists" '(( ${+functions[z-skk-add-marker]} ))'
-    assert "z-skk-update-marker exists" '(( ${+functions[z-skk-update-marker]} ))'
-    assert "z-skk-safe-redraw exists" '(( ${+functions[z-skk-safe-redraw]} ))'
+    assert '(( ${+functions[z-skk-clear-marker]} ))' "z-skk-clear-marker exists"
+    assert '(( ${+functions[z-skk-add-marker]} ))' "z-skk-add-marker exists"
+    assert '(( ${+functions[z-skk-update-marker]} ))' "z-skk-update-marker exists"
+    assert '(( ${+functions[z-skk-safe-redraw]} ))' "z-skk-safe-redraw exists"
 
     # Test marker operations
     LBUFFER="test"
@@ -32,10 +32,10 @@ test_display_utilities() {
 # Test utility functions
 test_utility_functions() {
     # Test utils loading
-    assert "z-skk-safe-execute exists" '(( ${+functions[z-skk-safe-execute]} ))'
-    assert "z-skk-save-state exists" '(( ${+functions[z-skk-save-state]} ))'
-    assert "z-skk-restore-state exists" '(( ${+functions[z-skk-restore-state]} ))'
-    assert "z-skk-full-reset exists" '(( ${+functions[z-skk-full-reset]} ))'
+    assert '(( ${+functions[z-skk-safe-execute]} ))' "z-skk-safe-execute exists"
+    assert '(( ${+functions[z-skk-save-state]} ))' "z-skk-save-state exists"
+    assert '(( ${+functions[z-skk-restore-state]} ))' "z-skk-restore-state exists"
+    assert '(( ${+functions[z-skk-full-reset]} ))' "z-skk-full-reset exists"
 
     # Test state save/restore
     Z_SKK_MODE="hiragana"
@@ -59,9 +59,9 @@ test_utility_functions() {
 # Test refactored conversion functions
 test_conversion_refactoring() {
     # Test new internal functions exist
-    assert "_z-skk-lookup-candidates exists" '(( ${+functions[_z-skk-lookup-candidates]} ))'
-    assert "_z-skk-prepare-candidates exists" '(( ${+functions[_z-skk-prepare-candidates]} ))'
-    assert "_z-skk-switch-to-selection-mode exists" '(( ${+functions[_z-skk-switch-to-selection-mode]} ))'
+    assert '(( ${+functions[_z-skk-lookup-candidates]} ))' "_z-skk-lookup-candidates exists"
+    assert '(( ${+functions[_z-skk-prepare-candidates]} ))' "_z-skk-prepare-candidates exists"
+    assert '(( ${+functions[_z-skk-switch-to-selection-mode]} ))' "_z-skk-switch-to-selection-mode exists"
 
     # Test conversion still works
     z-skk-reset-state
@@ -72,7 +72,7 @@ test_conversion_refactoring() {
     z-skk-start-conversion
 
     assert_equals "Candidates loaded" "2" "$Z_SKK_CONVERTING"
-    assert "Has candidates" '[[ ${#Z_SKK_CANDIDATES[@]} -gt 0 ]]'
+    assert '[[ ${#Z_SKK_CANDIDATES[@]} -gt 0 ]]' "Has candidates"
 }
 
 # Test full reset functionality
