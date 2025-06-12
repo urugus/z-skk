@@ -13,14 +13,14 @@ source "$PROJECT_DIR/z-skk.plugin.zsh"
 
 # Test dictionary module loaded
 # Functions should be loaded by plugin initialization
-assert "z-skk-lookup function exists" '(( ${+functions[z-skk-lookup]} ))'
-assert "z-skk-split-candidates function exists" '(( ${+functions[z-skk-split-candidates]} ))'
-assert "z-skk-get-candidate-word function exists" '(( ${+functions[z-skk-get-candidate-word]} ))'
-assert "z-skk-get-candidate-annotation function exists" '(( ${+functions[z-skk-get-candidate-annotation]} ))'
+assert '(( ${+functions[z-skk-lookup]} ))' "z-skk-lookup function exists"
+assert '(( ${+functions[z-skk-split-candidates]} ))' "z-skk-split-candidates function exists"
+assert '(( ${+functions[z-skk-get-candidate-word]} ))' "z-skk-get-candidate-word function exists"
+assert '(( ${+functions[z-skk-get-candidate-annotation]} ))' "z-skk-get-candidate-annotation function exists"
 
 # Test dictionary entries exist
-assert "Z_SKK_DICTIONARY exists" '[[ -v Z_SKK_DICTIONARY ]]'
-assert "Z_SKK_DICTIONARY is associative array" '[[ ${(t)Z_SKK_DICTIONARY} == *"association"* ]]'
+assert '[[ -v Z_SKK_DICTIONARY ]]' "Z_SKK_DICTIONARY exists"
+assert '[[ ${(t)Z_SKK_DICTIONARY} == *"association"* ]]' "Z_SKK_DICTIONARY is associative array"
 
 # Test basic lookup
 test_basic_lookup() {

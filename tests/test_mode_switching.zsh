@@ -12,10 +12,10 @@ source "$TEST_DIR/test_utils.zsh"
 source "$PROJECT_DIR/z-skk.plugin.zsh"
 
 # Test mode switching functions exist
-assert "z-skk-set-mode function exists" "(( \${+functions[z-skk-set-mode]} ))"
-assert "z-skk-toggle-kana function exists" "(( \${+functions[z-skk-toggle-kana]} ))"
-assert "z-skk-ascii-mode function exists" "(( \${+functions[z-skk-ascii-mode]} ))"
-assert "z-skk-hiragana-mode function exists" "(( \${+functions[z-skk-hiragana-mode]} ))"
+assert "(( \${+functions[z-skk-set-mode]} ))" "z-skk-set-mode function exists"
+assert "(( \${+functions[z-skk-toggle-kana]} ))" "z-skk-toggle-kana function exists"
+assert "(( \${+functions[z-skk-ascii-mode]} ))" "z-skk-ascii-mode function exists"
+assert "(( \${+functions[z-skk-hiragana-mode]} ))" "z-skk-hiragana-mode function exists"
 
 # Test initial state
 assert_equals "Initial mode is ascii" "ascii" "$Z_SKK_MODE"
@@ -56,7 +56,7 @@ assert_equals "Mode switch clears romaji buffer" "" "$Z_SKK_ROMAJI_BUFFER"
 assert_equals "Mode switch clears main buffer" "" "$Z_SKK_BUFFER"
 
 # Test mode display names
-assert "Mode display names are defined" "[[ -n \${Z_SKK_MODES[hiragana]} ]]"
+assert "[[ -n \${Z_SKK_MODES[hiragana]} ]]" "Mode display names are defined"
 assert_equals "Hiragana mode display" "かな" "${Z_SKK_MODES[hiragana]}"
 assert_equals "ASCII mode display" "英数" "${Z_SKK_MODES[ascii]}"
 

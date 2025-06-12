@@ -12,8 +12,8 @@ source "$TEST_DIR/test_utils.zsh"
 source "$PROJECT_DIR/z-skk.plugin.zsh"
 
 # Test conversion table exists
-assert "Z_SKK_ROMAJI_TO_HIRAGANA table exists" "[[ -n \${Z_SKK_ROMAJI_TO_HIRAGANA+x} ]]"
-assert "Z_SKK_ROMAJI_TO_HIRAGANA is associative array" "[[ \${(t)Z_SKK_ROMAJI_TO_HIRAGANA} == association* ]]"
+assert "[[ -n \${Z_SKK_ROMAJI_TO_HIRAGANA+x} ]]" "Z_SKK_ROMAJI_TO_HIRAGANA table exists"
+assert "[[ \${(t)Z_SKK_ROMAJI_TO_HIRAGANA} == association* ]]" "Z_SKK_ROMAJI_TO_HIRAGANA is associative array"
 
 # Test single vowel conversions
 assert_equals "Convert 'a' to 'あ'" "あ" "${Z_SKK_ROMAJI_TO_HIRAGANA[a]}"
@@ -39,10 +39,10 @@ assert_equals "Convert 'chi' to 'ち'" "ち" "${Z_SKK_ROMAJI_TO_HIRAGANA[chi]}"
 assert_equals "Convert 'tsu' to 'つ'" "つ" "${Z_SKK_ROMAJI_TO_HIRAGANA[tsu]}"
 
 # Test conversion function
-assert "z-skk-convert-romaji function exists" "(( \${+functions[z-skk-convert-romaji]} ))"
+assert "(( \${+functions[z-skk-convert-romaji]} ))" "z-skk-convert-romaji function exists"
 
 # Test romaji buffer management
-assert "Z_SKK_ROMAJI_BUFFER variable exists" "[[ -n \${Z_SKK_ROMAJI_BUFFER+x} ]]"
+assert "[[ -n \${Z_SKK_ROMAJI_BUFFER+x} ]]" "Z_SKK_ROMAJI_BUFFER variable exists"
 
 # Test conversion logic
 Z_SKK_ROMAJI_BUFFER="a"

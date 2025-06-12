@@ -12,19 +12,19 @@ source "$TEST_DIR/test_utils.zsh"
 source "$PROJECT_DIR/z-skk.plugin.zsh"
 
 # Test ASCII mode is default
-assert "Default mode is ASCII" "[[ \$Z_SKK_MODE == 'ascii' ]]"
+assert "[[ \$Z_SKK_MODE == 'ascii' ]]" "Default mode is ASCII"
 
 # Test widget functions exist
-assert "z-skk-self-insert widget exists" "(( \${+functions[z-skk-self-insert]} ))"
-assert "z-skk-enable function exists" "(( \${+functions[z-skk-enable]} ))"
-assert "z-skk-disable function exists" "(( \${+functions[z-skk-disable]} ))"
+assert "(( \${+functions[z-skk-self-insert]} ))" "z-skk-self-insert widget exists"
+assert "(( \${+functions[z-skk-enable]} ))" "z-skk-enable function exists"
+assert "(( \${+functions[z-skk-disable]} ))" "z-skk-disable function exists"
 
 # Test enable/disable functionality
 z-skk-disable
-assert "z-skk-disable sets enabled flag to 0" "[[ \$Z_SKK_ENABLED -eq 0 ]]"
+assert "[[ \$Z_SKK_ENABLED -eq 0 ]]" "z-skk-disable sets enabled flag to 0"
 
 z-skk-enable
-assert "z-skk-enable sets enabled flag to 1" "[[ \$Z_SKK_ENABLED -eq 1 ]]"
+assert "[[ \$Z_SKK_ENABLED -eq 1 ]]" "z-skk-enable sets enabled flag to 1"
 
 # Test pass-through in ASCII mode
 # Note: Testing actual ZLE behavior requires a more complex setup
@@ -37,7 +37,7 @@ typeset -g Z_SKK_PASS_THROUGH=0
 # Call the input handler logic (will be implemented)
 if (( ${+functions[z-skk-should-pass-through]} )); then
     z-skk-should-pass-through
-    assert "ASCII mode passes through regular characters" "[[ \$Z_SKK_PASS_THROUGH -eq 1 ]]"
+    assert "[[ \$Z_SKK_PASS_THROUGH -eq 1 ]]" "ASCII mode passes through regular characters"
 fi
 
 # Test that ASCII mode doesn't activate conversion
@@ -45,7 +45,7 @@ KEYS="A"  # Capital letter
 Z_SKK_PASS_THROUGH=0
 if (( ${+functions[z-skk-should-pass-through]} )); then
     z-skk-should-pass-through
-    assert "ASCII mode passes through capital letters" "[[ \$Z_SKK_PASS_THROUGH -eq 1 ]]"
+    assert "[[ \$Z_SKK_PASS_THROUGH -eq 1 ]]" "ASCII mode passes through capital letters"
 fi
 
 # Print summary and exit
