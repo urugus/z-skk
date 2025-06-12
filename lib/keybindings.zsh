@@ -85,6 +85,16 @@ z-skk-keyboard-quit() {
     zle send-break
 }
 
+# Register ZLE widgets first - must be done before any bindkey calls
+zle -N z-skk-self-insert
+zle -N z-skk-toggle-kana
+zle -N z-skk-ascii-mode
+zle -N z-skk-hiragana-mode
+zle -N z-skk-katakana-mode
+zle -N z-skk-zenkaku-mode
+zle -N z-skk-accept-line
+zle -N z-skk-keyboard-quit
+
 # Setup keybindings
 z-skk-setup-keybindings() {
     # Skip if already setup
@@ -114,16 +124,6 @@ z-skk-setup-keybindings() {
     # Mark as setup
     typeset -g Z_SKK_KEYBINDINGS_SETUP=1
 }
-
-# Register ZLE widgets - must be done before setup-keybindings
-zle -N z-skk-self-insert
-zle -N z-skk-toggle-kana
-zle -N z-skk-ascii-mode
-zle -N z-skk-hiragana-mode
-zle -N z-skk-katakana-mode
-zle -N z-skk-zenkaku-mode
-zle -N z-skk-accept-line
-zle -N z-skk-keyboard-quit
 
 # Initialize keybindings
 # For interactive shells, setup immediately

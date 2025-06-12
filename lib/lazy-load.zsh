@@ -64,6 +64,11 @@ z-skk-init-dictionary-loading() {
     z-skk-lazy-load "dictionary-io" && z-skk-init-dictionary-loading "$@"
 }
 
+# Internal function for testing
+_z-skk-parse-dict-line() {
+    z-skk-lazy-load "dictionary-io" && _z-skk-parse-dict-line "$@"
+}
+
 # Registration functions
 z-skk-start-registration() {
     z-skk-lazy-load "registration" && z-skk-start-registration "$@"
@@ -116,6 +121,14 @@ z-skk-reset-okurigana() {
 }
 
 # Input modes functions
+z-skk-set-mode() {
+    z-skk-lazy-load "input-modes" && z-skk-set-mode "$@"
+}
+
+z-skk-convert-romaji-to-katakana() {
+    z-skk-lazy-load "input-modes" && z-skk-convert-romaji-to-katakana "$@"
+}
+
 z-skk-start-abbrev-mode() {
     z-skk-lazy-load "input-modes" && z-skk-activate-abbrev "$@"
 }

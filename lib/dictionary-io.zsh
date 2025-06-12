@@ -67,58 +67,63 @@ z-skk-load-dictionary-file() {
     local max_errors=10
     local error_count=0
 
-    # Try to read file with error handling
-    {
-    while IFS= read -r line || [[ -n "$line" ]]; do
-        # Skip if we've hit too many errors
-        if ((error_count >= max_errors)); then
-            _z-skk-log-error "warn" "Too many parse errors, stopping dictionary load"
-            break
-        fi
-
-        # Parse line with error handling
-        local parsed_result=""
-        if parsed_result=$(_z-skk-parse-dict-line "$line" 2>/dev/null) 2>/dev/null; then
-            local -a parsed_array=(${(f)parsed_result})
-            if [[ ${#parsed_array[@]} -eq 2 ]]; then
-                reading="${parsed_array[1]}"
-                candidates="${parsed_array[2]}"
-                # Add to dictionary
-                if [[ -n "${Z_SKK_DICTIONARY[$reading]}" ]]; then
-                    # Merge with existing entries, avoiding duplicates
-                    local existing="${Z_SKK_DICTIONARY[$reading]}"
-                    local -a existing_candidates=("${(@s:/:)existing}")
-                    local -a new_candidates=("${(@s:/:)candidates}")
-                    local -A seen_candidates=()
-
-                    # Mark existing candidates as seen
-                    for cand in "${existing_candidates[@]}"; do
-                        # Extract the base word (before annotation)
-                        local base_word="${cand%%[;:]*}"
-                        seen_candidates[$base_word]=1
-                    done
-
-                    # Add only new candidates
-                    local merged="$existing"
-                    for cand in "${new_candidates[@]}"; do
-                        local base_word="${cand%%[;:]*}"
-                        if [[ -z "${seen_candidates[$base_word]}" ]]; then
-                            merged="${merged}/${cand}"
-                            seen_candidates[$base_word]=1
-                        fi
-                    done
-
-                    Z_SKK_DICTIONARY[$reading]="$merged"
-                else
-                    Z_SKK_DICTIONARY[$reading]="$candidates"
-                fi
-                ((count++))
+    # Try to read file with error handling and timeout protection
+    # Use a simple file read instead of process substitution to avoid potential hangs
+    if [[ -r "$dict_file" ]]; then
+        # Read file into array first (more reliable than process substitution)
+        local -a file_lines=()
+        file_lines=("${(@f)$(< "$dict_file" 2>/dev/null)}")
+        # Process lines
+        for line in "${file_lines[@]}"; do
+            # Skip if we've hit too many errors
+            if ((error_count >= max_errors)); then
+                _z-skk-log-error "warn" "Too many parse errors, stopping dictionary load"
+                break
             fi
-        else
-            ((error_count++))
-        fi
-    done < <(cat "$dict_file" 2>/dev/null || true)
-    } 2>/dev/null
+
+            # Parse line with error handling
+            local parsed_result=""
+            if parsed_result=$(_z-skk-parse-dict-line "$line" 2>/dev/null) 2>/dev/null; then
+                local -a parsed_array=(${(f)parsed_result})
+                if [[ ${#parsed_array[@]} -eq 2 ]]; then
+                    reading="${parsed_array[1]}"
+                    candidates="${parsed_array[2]}"
+                    # Add to dictionary
+                    if [[ -n "${Z_SKK_DICTIONARY[$reading]}" ]]; then
+                        # Merge with existing entries, avoiding duplicates
+                        local existing="${Z_SKK_DICTIONARY[$reading]}"
+                        local -a existing_candidates=("${(@s:/:)existing}")
+                        local -a new_candidates=("${(@s:/:)candidates}")
+                        local -A seen_candidates=()
+
+                        # Mark existing candidates as seen
+                        for cand in "${existing_candidates[@]}"; do
+                            # Extract the base word (before annotation)
+                            local base_word="${cand%%[;:]*}"
+                            seen_candidates[$base_word]=1
+                        done
+
+                        # Add only new candidates
+                        local merged="$existing"
+                        for cand in "${new_candidates[@]}"; do
+                            local base_word="${cand%%[;:]*}"
+                            if [[ -z "${seen_candidates[$base_word]}" ]]; then
+                                merged="${merged}/${cand}"
+                                seen_candidates[$base_word]=1
+                            fi
+                        done
+
+                        Z_SKK_DICTIONARY[$reading]="$merged"
+                    else
+                        Z_SKK_DICTIONARY[$reading]="$candidates"
+                    fi
+                    ((count++))
+                fi
+            else
+                ((error_count++))
+            fi
+        done
+    fi
 
     _z-skk-log-error "info" "Loaded $count entries from $dict_file"
     return 0

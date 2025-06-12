@@ -1,14 +1,7 @@
 #!/usr/bin/env zsh
 # Input mode management for z-skk
 
-# Mode definitions
-typeset -gA Z_SKK_MODE_NAMES=(
-    [hiragana]="かな"
-    [katakana]="カナ"
-    [ascii]="英数"
-    [zenkaku]="全英"
-    [abbrev]="Abbrev"
-)
+# Note: Z_SKK_MODE_NAMES is defined in modes.zsh
 
 # Set the current input mode
 z-skk-set-mode() {

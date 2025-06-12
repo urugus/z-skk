@@ -50,14 +50,16 @@ typeset -gA Z_SKK_MODULES=(
     [display]="optional"
 
     # Lazy-loaded modules (not loaded at startup)
-    [dictionary-io]="required"  # Need for tests
-    [registration]="required"   # Need for tests
-    [okurigana]="required"      # Need for tests
-    [input-modes]="required"    # Need for tests
-    [special-keys]="required"   # Need for tests
+    [dictionary-io]="lazy"  # Loaded when needed
+    [registration]="lazy"   # Loaded when needed
+    [okurigana]="lazy"      # Loaded when needed
+    [input-modes]="lazy"    # Loaded when needed
+    [special-keys]="lazy"   # Loaded when needed
 )
 
 # Module loading order (important for dependencies)
+# Note: Lazy-loaded modules (dictionary-io, registration, okurigana, input-modes, special-keys)
+# are NOT included here as they will be loaded on demand
 typeset -ga Z_SKK_MODULE_ORDER=(
     # Base infrastructure (no dependencies)
     error-handling conversion-tables
@@ -67,10 +69,6 @@ typeset -ga Z_SKK_MODULE_ORDER=(
     display
     # Core systems
     reset dictionary modes
-    # Dictionary and registration
-    dictionary-io registration
-    # Input modes and special keys
-    input-modes special-keys okurigana
     # Optional modules
     command-dispatch
     # Conversion modules (split for modularity)
@@ -102,6 +100,9 @@ _z-skk-load-module() {
         fi
         return 0
     fi
+
+    # Debug logging
+    (( ${+functions[z-skk-debug]} )) && z-skk-debug "Loading module: $module"
 
     # Special case for error-handling module (no safe-source yet)
     if [[ "$module" == "error-handling" ]]; then
@@ -138,33 +139,43 @@ _z-skk-load-all-modules() {
 
 # Initialize z-skk
 z-skk-init() {
+    # Load debug module first if available
+    local lib_dir="${Z_SKK_DIR}/lib"
+    if [[ -f "$lib_dir/debug.zsh" ]]; then
+        source "$lib_dir/debug.zsh"
+    fi
+
+    z-skk-debug "Starting z-skk initialization"
+
     # Initialize state
+    z-skk-debug "Resetting state"
     z-skk-reset-state
 
     # Set default mode
     Z_SKK_MODE="ascii"
 
     # Load all modules
+    z-skk-debug "Loading modules"
     _z-skk-load-all-modules || return 1
 
     # Post-load initialization
+    z-skk-debug "Post-load initialization"
     _z-skk-post-load-init
 
+    z-skk-debug "Initialization complete"
     print "z-skk: Initialized (v${Z_SKK_VERSION})"
     return 0
 }
 
 # Post-load initialization tasks
 _z-skk-post-load-init() {
-    # Initialize dictionary
+    # Initialize dictionary (basic setup only, no file loading)
     if (( ${+functions[z-skk-init-dictionary]} )); then
         z-skk-init-dictionary
     fi
 
-    # Initialize dictionary loading
-    if (( ${+functions[z-skk-init-dictionary-loading]} )); then
-        z-skk-init-dictionary-loading
-    fi
+    # Dictionary file loading is now lazy - will be loaded when first needed
+    # This avoids startup delays from reading potentially large dictionary files
 
     # Setup display
     if (( ${+functions[z-skk-display-setup]} )); then
