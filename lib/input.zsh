@@ -336,11 +336,6 @@ _z-skk-handle-zenkaku-input() {
 _z-skk-handle-abbrev-input() {
     local key="$1"
 
-    # Special key handling for abbrev mode
-    if z-skk-handle-abbrev-special "$key"; then
-        return
-    fi
-
     # Process abbreviation input
     z-skk-process-abbrev-input "$key"
 

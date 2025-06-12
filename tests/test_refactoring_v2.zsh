@@ -65,7 +65,7 @@ test_module_loading() {
     assert '[[ -v Z_SKK_MODULE_ORDER ]]' "Module order exists"
 
     # Check required modules are marked correctly
-    assert_equals "error is required" "required" "${Z_SKK_MODULES[error]}"
+    assert_equals "error-handling is required" "required" "${Z_SKK_MODULES[error-handling]}"
     assert_equals "utils is required" "required" "${Z_SKK_MODULES[utils]}"
     assert_equals "display is optional" "optional" "${Z_SKK_MODULES[display]}"
 

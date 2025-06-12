@@ -23,6 +23,11 @@ z-skk-set-mode() {
     # Reset state when changing modes
     if [[ "$mode" != "$Z_SKK_MODE" ]]; then
         z-skk-reset "buffer" "candidates" "romaji"
+        # Also reset abbrev state if leaving abbrev mode
+        if [[ "$Z_SKK_MODE" == "abbrev" ]]; then
+            Z_SKK_ABBREV_BUFFER=""
+            Z_SKK_ABBREV_ACTIVE=0
+        fi
     fi
 
     Z_SKK_MODE="$mode"
@@ -107,7 +112,8 @@ z-skk-activate-abbrev() {
 z-skk-deactivate-abbrev() {
     Z_SKK_ABBREV_ACTIVE=0
     Z_SKK_ABBREV_BUFFER=""
-    z-skk-set-mode "ascii"
+    # Return to hiragana mode instead of ascii when deactivating abbrev
+    z-skk-set-mode "hiragana"
 }
 
 # Process abbrev input
@@ -116,10 +122,17 @@ z-skk-process-abbrev-input() {
 
     # Space triggers conversion
     if [[ "$key" == " " ]] && [[ -n "$Z_SKK_ABBREV_BUFFER" ]]; then
-        # For now, just return the buffer as-is
-        # TODO: Implement actual abbreviation expansion
-        LBUFFER+="$Z_SKK_ABBREV_BUFFER"
+        # Save abbreviation before deactivating
+        local abbrev="$Z_SKK_ABBREV_BUFFER"
+        # Clear LBUFFER to prepare for marker display
+        LBUFFER="${LBUFFER%$abbrev}"
+        # Deactivate abbrev mode first
         z-skk-deactivate-abbrev
+        # Then start conversion with the saved abbreviation
+        Z_SKK_BUFFER="$abbrev"
+        Z_SKK_CONVERTING=1
+        # Update display with conversion marker
+        z-skk-update-conversion-display
         return 0
     fi
 

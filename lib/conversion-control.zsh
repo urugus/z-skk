@@ -74,11 +74,11 @@ z-skk-cancel-conversion() {
             z-skk-clear-marker "▼" "$current_candidate"
         fi
 
-        # Output buffer content as-is if in pre-conversion
-        if [[ $Z_SKK_CONVERTING -eq 1 && -n "$Z_SKK_BUFFER" ]]; then
+        # Output buffer content as-is
+        if [[ -n "$Z_SKK_BUFFER" ]]; then
             LBUFFER+="$Z_SKK_BUFFER"
-            # Also output any pending romaji
-            if [[ -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
+            # Also output any pending romaji if in pre-conversion
+            if [[ $Z_SKK_CONVERTING -eq 1 && -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
                 LBUFFER+="$Z_SKK_ROMAJI_BUFFER"
             fi
         fi

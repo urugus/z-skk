@@ -117,13 +117,13 @@ z-skk-reset-okurigana() {
 
 # Input modes functions
 z-skk-start-abbrev-mode() {
-    z-skk-lazy-load "input-modes" && z-skk-start-abbrev-mode "$@"
+    z-skk-lazy-load "input-modes" && z-skk-activate-abbrev "$@"
 }
 
 _z-skk-handle-abbrev-input() {
-    z-skk-lazy-load "input-modes" && _z-skk-handle-abbrev-input "$@"
+    z-skk-lazy-load "input-modes" && z-skk-process-abbrev-input "$@"
 }
 
 _z-skk-handle-zenkaku-input() {
-    z-skk-lazy-load "input-modes" && _z-skk-handle-zenkaku-input "$@"
+    z-skk-lazy-load "input-modes" && z-skk-process-zenkaku-input "$@"
 }
