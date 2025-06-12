@@ -2,7 +2,7 @@
 # Input mode management for z-skk
 
 # Mode definitions
-readonly -A Z_SKK_MODE_NAMES=(
+typeset -gA Z_SKK_MODE_NAMES=(
     [hiragana]="かな"
     [katakana]="カナ"
     [ascii]="英数"

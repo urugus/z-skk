@@ -2,11 +2,12 @@
 # Input mode management for z-skk
 
 # Set the input mode
-z-skk-set-mode() {
+# Note: This function is replaced by the one in input-modes.zsh
+_z-skk-set-mode-old() {
     local new_mode="$1"
 
     # Validate mode
-    if [[ -z "${Z_SKK_MODES[$new_mode]}" ]]; then
+    if [[ -z "${Z_SKK_MODE_NAMES[$new_mode]}" ]]; then
         # Invalid mode, do nothing
         return 1
     fi
@@ -97,7 +98,7 @@ z-skk-toggle-kana() {
 
 # Get current mode display string
 z-skk-get-mode-string() {
-    echo "${Z_SKK_MODES[$Z_SKK_MODE]:-$Z_SKK_MODE}"
+    echo "${Z_SKK_MODE_NAMES[$Z_SKK_MODE]:-$Z_SKK_MODE}"
 }
 
 # Mode indicator for prompts (future use)

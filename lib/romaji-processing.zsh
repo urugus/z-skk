@@ -7,6 +7,12 @@ typeset -g Z_SKK_ROMAJI_BUFFER=""
 # Result of conversion
 typeset -g Z_SKK_CONVERTED=""
 
+# Simple romaji to hiragana conversion function
+z-skk-romaji-to-hiragana() {
+    local romaji="$1"
+    echo "${Z_SKK_ROMAJI_TO_HIRAGANA[$romaji]:-}"
+}
+
 # Romaji prefix cache for performance
 typeset -gA Z_SKK_ROMAJI_PREFIX_CACHE=()
 

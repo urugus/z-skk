@@ -10,14 +10,7 @@ typeset -g Z_SKK_CANDIDATE_INDEX=0     # Current candidate index
 typeset -g Z_SKK_PASS_THROUGH=0        # Pass through flag for input handling
 typeset -g Z_SKK_LAST_INPUT=""          # Last input character for okurigana detection
 
-# Mode definitions
-typeset -gA Z_SKK_MODES=(
-    [hiragana]="かな"
-    [katakana]="カナ"
-    [ascii]="英数"
-    [zenkaku]="全英"
-    [abbrev]="Abbrev"
-)
+# Mode definitions are now in input-modes.zsh
 
 # Reset state function - delegates to reset.zsh
 z-skk-reset-state() {

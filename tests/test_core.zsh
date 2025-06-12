@@ -29,11 +29,11 @@ assert "[[ -n \${Z_SKK_CANDIDATE_INDEX+x} ]]" "Z_SKK_CANDIDATE_INDEX is defined"
 assert "[[ \$Z_SKK_CANDIDATE_INDEX -eq 0 ]]" "Z_SKK_CANDIDATE_INDEX default is 0"
 
 # Test mode definitions
-assert "[[ -n \${Z_SKK_MODES+x} ]]" "Z_SKK_MODES is defined"
-assert "[[ \${(t)Z_SKK_MODES} == association* ]]" "Z_SKK_MODES is associative array"
-assert "[[ -n \${Z_SKK_MODES[hiragana]} ]]" "Z_SKK_MODES has hiragana mode"
-assert "[[ -n \${Z_SKK_MODES[katakana]} ]]" "Z_SKK_MODES has katakana mode"
-assert "[[ -n \${Z_SKK_MODES[ascii]} ]]" "Z_SKK_MODES has ascii mode"
+assert "[[ -n \${Z_SKK_MODE_NAMES+x} ]]" "Z_SKK_MODE_NAMES is defined"
+assert "[[ \${(t)Z_SKK_MODE_NAMES} == association* ]]" "Z_SKK_MODE_NAMES is associative array"
+assert "[[ -n \${Z_SKK_MODE_NAMES[hiragana]} ]]" "Z_SKK_MODE_NAMES has hiragana mode"
+assert "[[ -n \${Z_SKK_MODE_NAMES[katakana]} ]]" "Z_SKK_MODE_NAMES has katakana mode"
+assert "[[ -n \${Z_SKK_MODE_NAMES[ascii]} ]]" "Z_SKK_MODE_NAMES has ascii mode"
 
 # Test initialization function
 assert "(( \${+functions[z-skk-reset-state]} ))" "z-skk-reset-state function exists"
