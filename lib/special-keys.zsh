@@ -29,27 +29,7 @@ z-skk-convert-previous-to-katakana() {
     return 1
 }
 
-# Convert a single hiragana character to katakana
-z-skk-hiragana-to-katakana() {
-    local hiragana="$1"
-
-    # Use table-based conversion if available
-    if (( ${+Z_SKK_HIRAGANA_TO_KATAKANA} )); then
-        echo "${Z_SKK_HIRAGANA_TO_KATAKANA[$hiragana]:-}"
-    else
-        # Fallback to case statement if table not loaded
-        local katakana=""
-        case "$hiragana" in
-            あ) katakana="ア" ;;
-            い) katakana="イ" ;;
-            う) katakana="ウ" ;;
-            え) katakana="エ" ;;
-            お) katakana="オ" ;;
-            *) katakana="" ;;
-        esac
-        echo "$katakana"
-    fi
-}
+# Note: z-skk-hiragana-to-katakana is now defined in conversion-tables.zsh
 
 # Insert today's date (@ key)
 z-skk-insert-date() {
@@ -60,8 +40,9 @@ z-skk-insert-date() {
     if [[ "$Z_SKK_MODE" == "hiragana" || "$Z_SKK_MODE" == "katakana" ]]; then
         # Convert to Japanese date format (令和6年11月7日)
         local year=$(date +%Y)
-        local month=$(date +%-m)
-        local day=$(date +%-d)
+        # Use sed to remove leading zeros for portability
+        local month=$(date +%m | sed 's/^0//')
+        local day=$(date +%d | sed 's/^0//')
 
         # Calculate Reiwa year (2019 = Reiwa 1)
         local reiwa_year=$((year - 2018))
@@ -152,23 +133,7 @@ z-skk-cancel-code-input() {
 }
 
 # Convert JIS code to character
-z-skk-jis-to-char() {
-    local code="$1"
-
-    # Use table-based conversion if available
-    if (( ${+Z_SKK_JIS_TO_CHAR} )); then
-        echo "${Z_SKK_JIS_TO_CHAR[$code]:-}"
-    else
-        # Fallback to basic conversion
-        case "$code" in
-            "3042") echo "あ" ;;
-            "30a2") echo "ア" ;;
-            "6f22") echo "漢" ;;
-            "5b57") echo "字" ;;
-            *) echo "" ;;
-        esac
-    fi
-}
+# Note: z-skk-jis-to-char is now defined in conversion-tables.zsh
 
 # Suffix input mode (> key)
 z-skk-start-suffix-input() {

@@ -71,6 +71,7 @@ EOF
 # Test user dictionary saving
 test_save_user_dictionary() {
     # Setup user dictionary
+    typeset -gA Z_SKK_USER_DICTIONARY
     Z_SKK_USER_DICTIONARY=()
     Z_SKK_USER_DICTIONARY[てすと]="テスト/test"
     Z_SKK_USER_DICTIONARY[ほぞん]="保存"

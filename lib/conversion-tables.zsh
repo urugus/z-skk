@@ -180,17 +180,18 @@ typeset -gA Z_SKK_ROMAJI_TO_HIRAGANA=(
 )
 
 # Optimized conversion functions using tables
-z-skk-hiragana-to-katakana-fast() {
+# These are now the primary implementations
+z-skk-hiragana-to-katakana() {
     local hiragana="$1"
     echo "${Z_SKK_HIRAGANA_TO_KATAKANA[$hiragana]:-}"
 }
 
-z-skk-convert-to-zenkaku-fast() {
+z-skk-convert-to-zenkaku() {
     local char="$1"
     echo "${Z_SKK_ASCII_TO_ZENKAKU[$char]:-$char}"
 }
 
-z-skk-jis-to-char-fast() {
+z-skk-jis-to-char() {
     local code="$1"
     echo "${Z_SKK_JIS_TO_CHAR[$code]:-}"
 }

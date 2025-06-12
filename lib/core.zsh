@@ -57,11 +57,11 @@ typeset -gA Z_SKK_MODULES=(
     [display]="optional"
 
     # Lazy-loaded modules (not loaded at startup)
-    [dictionary-io]="lazy"
-    [registration]="lazy"
-    [okurigana]="lazy"
-    [input-modes]="lazy"
-    [special-keys]="lazy"
+    [dictionary-io]="required"  # Need for tests
+    [registration]="required"   # Need for tests
+    [okurigana]="required"      # Need for tests
+    [input-modes]="required"    # Need for tests
+    [special-keys]="required"   # Need for tests
 )
 
 # Module loading order (important for dependencies)
@@ -74,6 +74,10 @@ typeset -ga Z_SKK_MODULE_ORDER=(
     display
     # Core systems
     reset dictionary modes
+    # Dictionary and registration
+    dictionary-io registration
+    # Input modes and special keys
+    input-modes special-keys okurigana
     # Optional modules
     command-dispatch
     # Conversion modules (split for modularity)

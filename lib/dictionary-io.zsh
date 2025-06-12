@@ -8,7 +8,8 @@ typeset -g Z_SKK_USER_JISYO_PATH="${SKK_JISYO_PATH:-${HOME}/.skk-jisyo}"
 typeset -g Z_SKK_SYSTEM_JISYO_PATH="${SKK_SYSTEM_JISYO_PATH:-}"
 
 # Personal dictionary (runtime modifications)
-typeset -gA Z_SKK_USER_DICTIONARY=()
+typeset -gA Z_SKK_USER_DICTIONARY
+Z_SKK_USER_DICTIONARY=()
 
 # Parse SKK dictionary line
 # Format: よみ /候補1/候補2;annotation2/候補3/

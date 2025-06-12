@@ -61,7 +61,7 @@ test_at_key_date() {
     z-skk-insert-date
 
     # Check format YYYY-MM-DD
-    assert "Date format" '[[ "$LBUFFER" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]'
+    assert '[[ "$LBUFFER" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]' "Date format"
 
     # Test in hiragana mode (Japanese format)
     Z_SKK_MODE="hiragana"
@@ -69,7 +69,7 @@ test_at_key_date() {
     z-skk-insert-date
 
     # Check Japanese format
-    assert "Japanese date format" '[[ "$LBUFFER" =~ ^令和[0-9]+年[0-9]+月[0-9]+日$ ]]'
+    assert '[[ "$LBUFFER" =~ ^令和[0-9]+年[0-9]+月[0-9]+日$ ]]' "Japanese date format"
 }
 
 # Test ; key - code input mode
@@ -112,21 +112,21 @@ test_special_input_mode_check() {
     Z_SKK_SUFFIX_MODE=0
     Z_SKK_PREFIX_MODE=0
 
-    assert "Not in special mode" '! z-skk-is-special-input-mode'
+    assert '! z-skk-is-special-input-mode' "Not in special mode"
 
     # Test code input mode
     Z_SKK_CODE_INPUT_MODE=1
-    assert "In code input mode" 'z-skk-is-special-input-mode'
+    assert 'z-skk-is-special-input-mode' "In code input mode"
 
     # Test suffix mode
     Z_SKK_CODE_INPUT_MODE=0
     Z_SKK_SUFFIX_MODE=1
-    assert "In suffix mode" 'z-skk-is-special-input-mode'
+    assert 'z-skk-is-special-input-mode' "In suffix mode"
 
     # Test prefix mode
     Z_SKK_SUFFIX_MODE=0
     Z_SKK_PREFIX_MODE=1
-    assert "In prefix mode" 'z-skk-is-special-input-mode'
+    assert 'z-skk-is-special-input-mode' "In prefix mode"
 }
 
 # Test > key - suffix input

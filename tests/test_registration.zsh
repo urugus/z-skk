@@ -124,8 +124,12 @@ test_conversion_to_registration() {
     LBUFFER=""
 
     # Clear the word from dictionary if it exists
-    unset "Z_SKK_DICTIONARY[みとうろく]"
-    unset "Z_SKK_USER_DICTIONARY[みとうろく]"
+    if [[ -n "${Z_SKK_DICTIONARY[みとうろく]+x}" ]]; then
+        unset "Z_SKK_DICTIONARY[みとうろく]"
+    fi
+    if [[ -n "${Z_SKK_USER_DICTIONARY[みとうろく]+x}" ]]; then
+        unset "Z_SKK_USER_DICTIONARY[みとうろく]"
+    fi
 
     # Start conversion with non-existent word
     Z_SKK_CONVERTING=1
