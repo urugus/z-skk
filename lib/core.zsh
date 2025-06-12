@@ -31,6 +31,7 @@ z-skk-reset-state() {
 typeset -gA Z_SKK_MODULES=(
     # Required modules (loading failure is fatal)
     [error-handling]="required"
+    [debug]="optional"  # Debug utilities (optional for production)
     [reset]="required"
     [conversion-tables]="required"
     [utils]="required"
@@ -62,7 +63,7 @@ typeset -gA Z_SKK_MODULES=(
 # are NOT included here as they will be loaded on demand
 typeset -ga Z_SKK_MODULE_ORDER=(
     # Base infrastructure (no dependencies)
-    error-handling conversion-tables
+    error-handling debug conversion-tables
     # Core utilities (minimal dependencies)
     utils events dictionary-data lazy-load
     # Display system (needed by many modules)
@@ -139,30 +140,25 @@ _z-skk-load-all-modules() {
 
 # Initialize z-skk
 z-skk-init() {
-    # Load debug module first if available
-    local lib_dir="${Z_SKK_DIR}/lib"
-    if [[ -f "$lib_dir/debug.zsh" ]]; then
-        source "$lib_dir/debug.zsh"
-    fi
-
-    z-skk-debug "Starting z-skk initialization"
+    # Debug will be loaded through module system
+    (( ${+functions[z-skk-debug]} )) && z-skk-debug "Starting z-skk initialization"
 
     # Initialize state
-    z-skk-debug "Resetting state"
+    (( ${+functions[z-skk-debug]} )) && z-skk-debug "Resetting state"
     z-skk-reset-state
 
     # Set default mode
     Z_SKK_MODE="ascii"
 
     # Load all modules
-    z-skk-debug "Loading modules"
+    (( ${+functions[z-skk-debug]} )) && z-skk-debug "Loading modules"
     _z-skk-load-all-modules || return 1
 
     # Post-load initialization
-    z-skk-debug "Post-load initialization"
+    (( ${+functions[z-skk-debug]} )) && z-skk-debug "Post-load initialization"
     _z-skk-post-load-init
 
-    z-skk-debug "Initialization complete"
+    (( ${+functions[z-skk-debug]} )) && z-skk-debug "Initialization complete"
     print "z-skk: Initialized (v${Z_SKK_VERSION})"
     return 0
 }

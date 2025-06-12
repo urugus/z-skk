@@ -48,9 +48,4 @@ z-skk-is-public-function() {
     [[ "$func_name" =~ ^z-skk-[^_] ]]
 }
 
-# Debug logging utility
-z-skk-debug() {
-    if [[ "${Z_SKK_DEBUG:-0}" -eq 1 ]]; then
-        print "z-skk: $*" >&2
-    fi
-}
+# Debug logging utility is now in debug.zsh
