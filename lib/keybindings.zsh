@@ -150,10 +150,11 @@ z-skk-setup-keybindings() {
 }
 
 # Initialize keybindings
-# For interactive shells, register widgets and setup immediately
+# For interactive shells, register widgets but delay keybinding setup
 if [[ -o interactive ]]; then
     z-skk-register-widgets
-    z-skk-setup-keybindings
+    # Don't setup keybindings immediately to avoid "undefined-key" errors
+    # They will be setup on first line edit via zle-line-init
 fi
 
 # For non-interactive shells (like when loaded by zinit),

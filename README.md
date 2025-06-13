@@ -69,6 +69,41 @@ zsh tests/run_all.zsh
 zsh tests/test_plugin_loading.zsh
 ```
 
+### Debug mode
+
+z-skk provides debug logging to help troubleshoot issues:
+
+```bash
+# Enable debug mode
+export Z_SKK_DEBUG=1
+
+# Enable debug mode with specific levels (optional)
+export Z_SKK_DEBUG_LEVEL=3  # 1=errors, 2=warnings, 3=info, 4=debug, 5=trace
+
+# Debug logs will be written to stderr and optionally to a file
+export Z_SKK_DEBUG_FILE="$HOME/.z-skk-debug.log"
+```
+
+Debug commands:
+```bash
+# Show current z-skk state
+z-skk-debug-state
+
+# Show loaded modules
+z-skk-debug-modules
+
+# Show current keybindings
+z-skk-debug-keys
+
+# Clear debug log
+z-skk-debug-clear
+```
+
+When reporting issues, please include:
+1. Your zsh version: `zsh --version`
+2. Your z-skk version: `echo $Z_SKK_VERSION`
+3. Debug log output with `Z_SKK_DEBUG=1`
+
 ### CI
 
 Tests and linting are automatically run on push and pull requests via GitHub Actions.

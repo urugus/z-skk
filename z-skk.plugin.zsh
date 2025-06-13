@@ -26,7 +26,10 @@ typeset -g Z_SKK_DIR="${0:A:h}"
     if (( ${+functions[z-skk-init]} )); then
         z-skk-init
     else
-        print "z-skk: Loaded (v${Z_SKK_VERSION})"
+        # Only show message if debug is enabled
+        if [[ -n "${Z_SKK_DEBUG:-}" ]]; then
+            print "z-skk: Loaded (v${Z_SKK_VERSION})"
+        fi
     fi
 
     # Export setup function for external use
