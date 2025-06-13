@@ -18,8 +18,8 @@ typeset -g Z_SKK_DIR="${0:A:h}"
     fi
 
     # Source core functionality (will be implemented)
-    if [[ -f "$lib_dir/core.zsh" ]]; then
-        source "$lib_dir/core.zsh"
+    if [[ -f "$lib_dir/core/core.zsh" ]]; then
+        source "$lib_dir/core/core.zsh"
     fi
 
     # Initialize z-skk

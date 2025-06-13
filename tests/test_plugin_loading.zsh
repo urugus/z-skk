@@ -24,7 +24,7 @@ assert "[[ -n \$Z_SKK_DIR ]]" "Plugin sets directory variable"
 assert "[[ -d '$PROJECT_DIR/lib' ]]" "Lib directory exists"
 
 # Test core.zsh exists
-assert "[[ -f '$PROJECT_DIR/lib/core.zsh' ]]" "Core.zsh exists"
+assert "[[ -f '$PROJECT_DIR/lib/core/core.zsh' ]]" "Core.zsh exists"
 
 # Test z-skk-init function is defined
 assert "(( \${+functions[z-skk-init]} ))" "z-skk-init function is defined"

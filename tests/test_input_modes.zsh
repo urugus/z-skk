@@ -16,7 +16,7 @@ if (( ${+functions[z-skk-lazy-load-module]} )); then
     z-skk-lazy-load-module "input-modes"
 else
     # Fallback: source directly
-    source "$PROJECT_DIR/lib/input-modes.zsh"
+    source "$PROJECT_DIR/lib/input/input-modes.zsh"
 fi
 
 # Test katakana mode

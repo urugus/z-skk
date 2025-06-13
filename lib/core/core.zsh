@@ -27,6 +27,47 @@ z-skk-reset-state() {
     fi
 }
 
+# Module directory mapping
+typeset -gA Z_SKK_MODULE_DIRS=(
+    # Core modules
+    [error-handling]="core"
+    [debug]="utils"
+    [reset]="utils"
+    [state]="core"
+    [events]="core"
+    [lazy-load]="core"
+    
+    # Input modules
+    [modes]="input"
+    [input]="input"
+    [input-modes]="input"
+    [keybindings]="input"
+    [command-dispatch]="input"
+    [special-keys]="input"
+    
+    # Conversion modules
+    [conversion-tables]="conversion"
+    [conversion]="conversion"
+    [conversion-control]="conversion"
+    [conversion-display]="conversion"
+    [romaji-processing]="conversion"
+    [candidate-management]="conversion"
+    [okurigana]="conversion"
+    
+    # Dictionary modules
+    [dictionary]="dictionary"
+    [dictionary-data]="dictionary"
+    [dictionary-io]="dictionary"
+    [registration]="dictionary"
+    
+    # Display modules
+    [display]="display"
+    [display-api]="display"
+    
+    # Utils modules
+    [utils]="utils"
+)
+
 # Module loading configuration
 typeset -gA Z_SKK_MODULES=(
     # Required modules (loading failure is fatal)
@@ -88,7 +129,16 @@ _z-skk-load-module() {
     local module="$1"
     local requirement="${Z_SKK_MODULES[$module]:-optional}"
     local lib_dir="${Z_SKK_DIR}/lib"
-    local module_file="$lib_dir/$module.zsh"
+    local module_dir="${Z_SKK_MODULE_DIRS[$module]:-}"
+    local module_file
+    
+    # Determine module file path
+    if [[ -n "$module_dir" ]]; then
+        module_file="$lib_dir/$module_dir/$module.zsh"
+    else
+        # Fallback to flat structure for backward compatibility
+        module_file="$lib_dir/$module.zsh"
+    fi
 
     # Skip lazy modules during initial load
     if [[ "$requirement" == "lazy" ]]; then

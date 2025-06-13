@@ -23,7 +23,7 @@ if (( ${+functions[z-skk-lazy-load-module]} )); then
     z-skk-lazy-load-module "registration"
 else
     # Fallback: source directly
-    source "$PROJECT_DIR/lib/registration.zsh"
+    source "$PROJECT_DIR/lib/dictionary/registration.zsh"
 fi
 
 # Test registration mode initialization

@@ -25,7 +25,16 @@ z-skk-lazy-load() {
     typeset -g Z_SKK_LOADING_MODULES[$module]=1
 
     # Load the module
-    local module_file="${Z_SKK_DIR}/lib/${module}.zsh"
+    local module_dir="${Z_SKK_MODULE_DIRS[$module]:-}"
+    local module_file
+    
+    # Determine module file path
+    if [[ -n "$module_dir" ]]; then
+        module_file="${Z_SKK_DIR}/lib/${module_dir}/${module}.zsh"
+    else
+        # Fallback to flat structure for backward compatibility
+        module_file="${Z_SKK_DIR}/lib/${module}.zsh"
+    fi
     if [[ -f "$module_file" ]]; then
         if z-skk-safe-source "$module_file"; then
             Z_SKK_LOADED_MODULES[$module]=1
@@ -84,6 +93,14 @@ z-skk-cancel-registration() {
 
 z-skk-is-registering() {
     z-skk-lazy-load "registration" && z-skk-is-registering "$@"
+}
+
+z-skk-registration-input() {
+    z-skk-lazy-load "registration" && z-skk-registration-input "$@"
+}
+
+z-skk-update-registration-display() {
+    z-skk-lazy-load "registration" && z-skk-update-registration-display "$@"
 }
 
 # Special keys functions
