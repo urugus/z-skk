@@ -15,49 +15,85 @@ _z-skk-handle-hiragana-special-key() {
         l|L)
             # Switch to ASCII mode
             z-skk-ascii-mode
-            z-skk-safe-redraw
+            (( ${+functions[z-skk-safe-redraw]} )) && z-skk-safe-redraw
             return 0
             ;;
         /)
             # Switch to abbrev mode
-            z-skk-start-abbrev-mode
-            z-skk-safe-redraw
+            if (( ${+functions[z-skk-start-abbrev-mode]} )); then
+                z-skk-start-abbrev-mode
+            else
+                # Try to lazy load input-modes module
+                (( ${+functions[z-skk-lazy-load]} )) && z-skk-lazy-load input-modes
+                (( ${+functions[z-skk-start-abbrev-mode]} )) && z-skk-start-abbrev-mode
+            fi
+            (( ${+functions[z-skk-safe-redraw]} )) && z-skk-safe-redraw
             return 0
             ;;
         q)
             # Switch to katakana mode
             z-skk-katakana-mode
-            z-skk-safe-redraw
+            (( ${+functions[z-skk-safe-redraw]} )) && z-skk-safe-redraw
             return 0
             ;;
         X)
             # Convert previous character to katakana
-            z-skk-convert-previous-to-katakana
-            z-skk-safe-redraw
+            if (( ${+functions[z-skk-convert-previous-to-katakana]} )); then
+                z-skk-convert-previous-to-katakana
+            else
+                # Try to lazy load special-keys module
+                (( ${+functions[z-skk-lazy-load]} )) && z-skk-lazy-load special-keys
+                (( ${+functions[z-skk-convert-previous-to-katakana]} )) && z-skk-convert-previous-to-katakana
+            fi
+            (( ${+functions[z-skk-safe-redraw]} )) && z-skk-safe-redraw
             return 0
             ;;
         @)
             # Insert today's date
-            z-skk-insert-date
-            z-skk-safe-redraw
+            if (( ${+functions[z-skk-insert-date]} )); then
+                z-skk-insert-date
+            else
+                # Try to lazy load special-keys module
+                (( ${+functions[z-skk-lazy-load]} )) && z-skk-lazy-load special-keys
+                (( ${+functions[z-skk-insert-date]} )) && z-skk-insert-date
+            fi
+            (( ${+functions[z-skk-safe-redraw]} )) && z-skk-safe-redraw
             return 0
             ;;
         ";")
             # Start JIS code input
-            z-skk-code-input
-            z-skk-safe-redraw
+            if (( ${+functions[z-skk-code-input]} )); then
+                z-skk-code-input
+            else
+                # Try to lazy load special-keys module
+                (( ${+functions[z-skk-lazy-load]} )) && z-skk-lazy-load special-keys
+                (( ${+functions[z-skk-code-input]} )) && z-skk-code-input
+            fi
+            (( ${+functions[z-skk-safe-redraw]} )) && z-skk-safe-redraw
             return 0
             ;;
         ">")
             # Start suffix input mode
-            z-skk-start-suffix-input
-            z-skk-safe-redraw
+            if (( ${+functions[z-skk-start-suffix-input]} )); then
+                z-skk-start-suffix-input
+            else
+                # Try to lazy load special-keys module
+                (( ${+functions[z-skk-lazy-load]} )) && z-skk-lazy-load special-keys
+                (( ${+functions[z-skk-start-suffix-input]} )) && z-skk-start-suffix-input
+            fi
+            (( ${+functions[z-skk-safe-redraw]} )) && z-skk-safe-redraw
             return 0
             ;;
         "?")
             # Start prefix input mode
-            z-skk-start-prefix-input
-            z-skk-safe-redraw
+            if (( ${+functions[z-skk-start-prefix-input]} )); then
+                z-skk-start-prefix-input
+            else
+                # Try to lazy load special-keys module
+                (( ${+functions[z-skk-lazy-load]} )) && z-skk-lazy-load special-keys
+                (( ${+functions[z-skk-start-prefix-input]} )) && z-skk-start-prefix-input
+            fi
+            (( ${+functions[z-skk-safe-redraw]} )) && z-skk-safe-redraw
             return 0
             ;;
     esac
@@ -74,8 +110,14 @@ _z-skk-check-special-input-mode() {
     if (( ${+functions[z-skk-is-special-input-mode]} )); then
         if z-skk-is-special-input-mode; then
             if [[ ${Z_SKK_CODE_INPUT_MODE:-0} -eq 1 ]]; then
-                z-skk-process-code-input "$key"
-                z-skk-safe-redraw
+                if (( ${+functions[z-skk-process-code-input]} )); then
+                    z-skk-process-code-input "$key"
+                else
+                    # Try to lazy load special-keys module
+                    (( ${+functions[z-skk-lazy-load]} )) && z-skk-lazy-load special-keys
+                    (( ${+functions[z-skk-process-code-input]} )) && z-skk-process-code-input "$key"
+                fi
+                (( ${+functions[z-skk-safe-redraw]} )) && z-skk-safe-redraw
                 return 0
             fi
             # Handle other special modes in the future
@@ -142,7 +184,7 @@ _z-skk-handle-hiragana-input() {
     _z-skk-process-hiragana-character "$key"
 
     # Redraw the line
-    z-skk-safe-redraw
+    (( ${+functions[z-skk-safe-redraw]} )) && z-skk-safe-redraw
 }
 
 # Handle keys during candidate selection
@@ -326,8 +368,18 @@ _z-skk-handle-katakana-input() {
     fi
 
     # Special key handling for katakana mode
-    if z-skk-handle-katakana-special "$key"; then
-        return
+    if (( ${+functions[z-skk-handle-katakana-special]} )); then
+        if z-skk-handle-katakana-special "$key"; then
+            return
+        fi
+    else
+        # Try to lazy load input-modes module
+        (( ${+functions[z-skk-lazy-load]} )) && z-skk-lazy-load input-modes
+        if (( ${+functions[z-skk-handle-katakana-special]} )); then
+            if z-skk-handle-katakana-special "$key"; then
+                return
+            fi
+        fi
     fi
 
     # Check for uppercase (conversion start)
@@ -341,7 +393,13 @@ _z-skk-handle-katakana-input() {
     fi
 
     # Process romaji input as katakana
-    z-skk-process-katakana-input "$processed_key"
+    if (( ${+functions[z-skk-process-katakana-input]} )); then
+        z-skk-process-katakana-input "$processed_key"
+    else
+        # Try to lazy load input-modes module
+        (( ${+functions[z-skk-lazy-load]} )) && z-skk-lazy-load input-modes
+        (( ${+functions[z-skk-process-katakana-input]} )) && z-skk-process-katakana-input "$processed_key"
+    fi
 
     # Update display with marker if converting
     if z-skk-is-pre-converting; then
@@ -349,7 +407,7 @@ _z-skk-handle-katakana-input() {
     fi
 
     # Redraw the line
-    z-skk-safe-redraw
+    (( ${+functions[z-skk-safe-redraw]} )) && z-skk-safe-redraw
 }
 
 # Handle input in zenkaku mode
@@ -357,15 +415,31 @@ _z-skk-handle-zenkaku-input() {
     local key="$1"
 
     # Special key handling for zenkaku mode
-    if z-skk-handle-zenkaku-special "$key"; then
-        return
+    if (( ${+functions[z-skk-handle-zenkaku-special]} )); then
+        if z-skk-handle-zenkaku-special "$key"; then
+            return
+        fi
+    else
+        # Try to lazy load input-modes module
+        (( ${+functions[z-skk-lazy-load]} )) && z-skk-lazy-load input-modes
+        if (( ${+functions[z-skk-handle-zenkaku-special]} )); then
+            if z-skk-handle-zenkaku-special "$key"; then
+                return
+            fi
+        fi
     fi
 
     # Process as zenkaku
-    z-skk-process-zenkaku-input "$key"
+    if (( ${+functions[z-skk-process-zenkaku-input]} )); then
+        z-skk-process-zenkaku-input "$key"
+    else
+        # Try to lazy load input-modes module
+        (( ${+functions[z-skk-lazy-load]} )) && z-skk-lazy-load input-modes
+        (( ${+functions[z-skk-process-zenkaku-input]} )) && z-skk-process-zenkaku-input "$key"
+    fi
 
     # Redraw the line
-    z-skk-safe-redraw
+    (( ${+functions[z-skk-safe-redraw]} )) && z-skk-safe-redraw
 }
 
 # Handle input in abbrev mode
@@ -373,10 +447,16 @@ _z-skk-handle-abbrev-input() {
     local key="$1"
 
     # Process abbreviation input
-    z-skk-process-abbrev-input "$key"
+    if (( ${+functions[z-skk-process-abbrev-input]} )); then
+        z-skk-process-abbrev-input "$key"
+    else
+        # Try to lazy load input-modes module
+        (( ${+functions[z-skk-lazy-load]} )) && z-skk-lazy-load input-modes
+        (( ${+functions[z-skk-process-abbrev-input]} )) && z-skk-process-abbrev-input "$key"
+    fi
 
     # Redraw the line
-    z-skk-safe-redraw
+    (( ${+functions[z-skk-safe-redraw]} )) && z-skk-safe-redraw
 }
 
 # Mode handler table
@@ -395,7 +475,7 @@ z-skk-handle-input() {
     # Check if in registration mode first
     if (( ${+functions[z-skk-is-registering]} )) && z-skk-is-registering; then
         z-skk-registration-input "$key"
-        z-skk-safe-redraw
+        (( ${+functions[z-skk-safe-redraw]} )) && z-skk-safe-redraw
         return
     fi
 

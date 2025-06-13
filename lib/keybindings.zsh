@@ -39,6 +39,13 @@ z-skk-should-pass-through() {
 
 # Main character input widget
 z-skk-self-insert() {
+    # Check if functions are loaded
+    if ! (( ${+functions[z-skk-should-pass-through]} )) || ! (( ${+functions[z-skk-handle-input]} )); then
+        # Functions not loaded yet, pass through
+        zle .self-insert
+        return
+    fi
+
     # Check if we should pass through
     if z-skk-should-pass-through; then
         # Pass through to default self-insert
@@ -85,20 +92,37 @@ z-skk-keyboard-quit() {
     zle send-break
 }
 
-# Register ZLE widgets first - must be done before any bindkey calls
-zle -N z-skk-self-insert
-zle -N z-skk-toggle-kana
-zle -N z-skk-ascii-mode
-zle -N z-skk-hiragana-mode
-zle -N z-skk-katakana-mode
-zle -N z-skk-zenkaku-mode
-zle -N z-skk-accept-line
-zle -N z-skk-keyboard-quit
+# Register ZLE widgets
+z-skk-register-widgets() {
+    # Skip if already registered
+    [[ -n "${Z_SKK_WIDGETS_REGISTERED:-}" ]] && return 0
+
+    # Check if zle is available
+    if ! (( ${+builtins[zle]} )); then
+        return 0
+    fi
+
+    # Register widgets only if the functions exist
+    (( ${+functions[z-skk-self-insert]} )) && zle -N z-skk-self-insert
+    (( ${+functions[z-skk-toggle-kana]} )) && zle -N z-skk-toggle-kana
+    (( ${+functions[z-skk-ascii-mode]} )) && zle -N z-skk-ascii-mode
+    (( ${+functions[z-skk-hiragana-mode]} )) && zle -N z-skk-hiragana-mode
+    (( ${+functions[z-skk-katakana-mode]} )) && zle -N z-skk-katakana-mode
+    (( ${+functions[z-skk-zenkaku-mode]} )) && zle -N z-skk-zenkaku-mode
+    (( ${+functions[z-skk-accept-line]} )) && zle -N z-skk-accept-line
+    (( ${+functions[z-skk-keyboard-quit]} )) && zle -N z-skk-keyboard-quit
+
+    # Mark as registered
+    typeset -g Z_SKK_WIDGETS_REGISTERED=1
+}
 
 # Setup keybindings
 z-skk-setup-keybindings() {
     # Skip if already setup
     [[ -n "${Z_SKK_KEYBINDINGS_SETUP:-}" ]] && return 0
+
+    # Ensure widgets are registered first
+    z-skk-register-widgets
 
     # Save original self-insert widget if not already saved
     if ! (( ${+widgets[.self-insert]} )); then
@@ -126,15 +150,17 @@ z-skk-setup-keybindings() {
 }
 
 # Initialize keybindings
-# For interactive shells, setup immediately
+# For interactive shells, register widgets and setup immediately
 if [[ -o interactive ]]; then
+    z-skk-register-widgets
     z-skk-setup-keybindings
 fi
 
 # For non-interactive shells (like when loaded by zinit),
 # setup keybindings on first line edit
 z-skk-line-init() {
-    # Setup keybindings if not already done
+    # Register widgets and setup keybindings if not already done
+    z-skk-register-widgets
     z-skk-setup-keybindings
 
     # Call original zle-line-init if it exists

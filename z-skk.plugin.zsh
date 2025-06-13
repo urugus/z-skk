@@ -28,6 +28,11 @@ typeset -g Z_SKK_DIR="${0:A:h}"
     else
         print "z-skk: Loaded (v${Z_SKK_VERSION})"
     fi
+
+    # Export setup function for external use
+    if (( ${+functions[z-skk-setup-keybindings]} )); then
+        typeset -gf z-skk-setup-keybindings
+    fi
 }
 
 # Cleanup function for unloading
