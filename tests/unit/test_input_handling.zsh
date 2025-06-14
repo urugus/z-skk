@@ -67,7 +67,7 @@ if (( ${+functions[z-skk-should-pass-through]} )); then
     typeset -g Z_SKK_PASS_THROUGH=0
     z-skk-should-pass-through
     assert "[[ \$Z_SKK_PASS_THROUGH -eq 1 ]]" "ASCII mode passes through regular characters"
-    
+
     # Test capital letters
     KEYS="A"
     Z_SKK_PASS_THROUGH=0

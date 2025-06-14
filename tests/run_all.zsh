@@ -48,7 +48,7 @@ run_test() {
 run_tests_in_dir() {
     local dir="$1"
     local pattern="${2:-test_*.zsh}"
-    
+
     for test_file in "$dir"/$~pattern; do
         [[ -f "$test_file" ]] || continue
         run_test "$test_file"

@@ -18,10 +18,14 @@ jobs:
     
     - name: Make test files executable
       run: |
-        chmod +x tests/*.zsh
+        chmod +x tests/*.zsh || true
         chmod +x tests/integration/*.zsh || true
+        chmod +x tests/loading/*.zsh || true
+        chmod +x tests/unit/*.zsh || true
+        chmod +x tests/regression/*.zsh || true
+        chmod +x tests/manual/*.zsh || true
         find lib -name "*.zsh" -type f -exec chmod +x {} \;
-        chmod +x scripts/*.zsh
+        chmod +x scripts/*.zsh || true
         chmod +x z-skk.plugin.zsh
     
     - name: Install zsh
@@ -47,8 +51,8 @@ jobs:
     
     - name: Run tests
       run: |
-        zsh tests/test_plugin_loading.zsh
-        zsh tests/test_zinit_loading.zsh
+        zsh tests/loading/test_plugin_loading.zsh
+        zsh tests/loading/test_zinit_loading.zsh
     
     - name: Run all tests
       shell: bash
