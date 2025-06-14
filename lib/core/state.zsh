@@ -97,7 +97,7 @@ z-skk-set-mode() {
             ;;
         *)
             if (( ${+functions[_z-skk-log-error]} )); then
-                _z-skk-log-error "error" "Invalid mode: $new_mode"
+                _z-skk-log-error "warn" "Invalid mode: $new_mode"
             fi
             return 1
             ;;
@@ -313,7 +313,7 @@ z-skk-validate-state() {
             ;;
         *)
             if (( ${+functions[_z-skk-log-error]} )); then
-                _z-skk-log-error "error" "Invalid mode: $Z_SKK_MODE"
+                _z-skk-log-error "warn" "Invalid mode: $Z_SKK_MODE"
             fi
             ((errors++))
             ;;

@@ -27,7 +27,7 @@ z-skk-lazy-load() {
     # Load the module
     local module_dir="${Z_SKK_MODULE_DIRS[$module]:-}"
     local module_file
-    
+
     # Determine module file path
     if [[ -n "$module_dir" ]]; then
         module_file="${Z_SKK_DIR}/lib/${module_dir}/${module}.zsh"

@@ -36,7 +36,7 @@ typeset -gA Z_SKK_MODULE_DIRS=(
     [state]="core"
     [events]="core"
     [lazy-load]="core"
-    
+
     # Input modules
     [modes]="input"
     [input]="input"
@@ -44,7 +44,7 @@ typeset -gA Z_SKK_MODULE_DIRS=(
     [keybindings]="input"
     [command-dispatch]="input"
     [special-keys]="input"
-    
+
     # Conversion modules
     [conversion-tables]="conversion"
     [conversion]="conversion"
@@ -53,17 +53,17 @@ typeset -gA Z_SKK_MODULE_DIRS=(
     [romaji-processing]="conversion"
     [candidate-management]="conversion"
     [okurigana]="conversion"
-    
+
     # Dictionary modules
     [dictionary]="dictionary"
     [dictionary-data]="dictionary"
     [dictionary-io]="dictionary"
     [registration]="dictionary"
-    
+
     # Display modules
     [display]="display"
     [display-api]="display"
-    
+
     # Utils modules
     [utils]="utils"
 )
@@ -131,7 +131,7 @@ _z-skk-load-module() {
     local lib_dir="${Z_SKK_DIR}/lib"
     local module_dir="${Z_SKK_MODULE_DIRS[$module]:-}"
     local module_file
-    
+
     # Determine module file path
     if [[ -n "$module_dir" ]]; then
         module_file="$lib_dir/$module_dir/$module.zsh"

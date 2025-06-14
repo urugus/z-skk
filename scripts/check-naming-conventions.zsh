@@ -9,7 +9,7 @@ print "=== Checking naming conventions ==="
 
 # Check function naming conventions
 print "\nChecking function naming..."
-for file in "$PROJECT_DIR"/lib/*.zsh; do
+for file in "$PROJECT_DIR"/lib/**/*.zsh(N); do
     [[ ! -f "$file" ]] && continue
 
     # Use grep to find function definitions more accurately
@@ -51,7 +51,7 @@ done
 
 # Check global variable naming conventions
 print "\nChecking global variable naming..."
-for file in "$PROJECT_DIR"/lib/*.zsh; do
+for file in "$PROJECT_DIR"/lib/**/*.zsh(N); do
     [[ ! -f "$file" ]] && continue
 
     # Extract typeset/declare statements for global variables
