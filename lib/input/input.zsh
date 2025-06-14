@@ -300,7 +300,8 @@ _z-skk-should-start-okurigana() {
             # The uppercase should be DURING conversion, not the initial one
             # Check if we have more than one character in the buffer
             # (The initial uppercase would only create one hiragana character)
-            if [[ ${#Z_SKK_BUFFER} -gt 1 || -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
+            # Also check that the buffer has actual hiragana content, not just pending romaji
+            if [[ ${#Z_SKK_BUFFER} -gt 1 ]]; then
                 return 0
             fi
         fi
