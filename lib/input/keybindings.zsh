@@ -136,14 +136,14 @@ z-skk-setup-keybindings() {
         bindkey "$c" z-skk-self-insert
     done
 
-    # Mode switching keys
-    bindkey "^J" z-skk-toggle-kana    # Toggle hiragana/ascii
-    bindkey "^L" z-skk-ascii-mode     # Force ASCII mode
-    bindkey "^Q" z-skk-zenkaku-mode   # Zenkaku (full-width) mode
+    # Mode switching keys - only bind if widgets exist
+    (( ${+widgets[z-skk-toggle-kana]} )) && bindkey "^J" z-skk-toggle-kana    # Toggle hiragana/ascii
+    (( ${+widgets[z-skk-ascii-mode]} )) && bindkey "^L" z-skk-ascii-mode     # Force ASCII mode
+    (( ${+widgets[z-skk-zenkaku-mode]} )) && bindkey "^Q" z-skk-zenkaku-mode   # Zenkaku (full-width) mode
 
-    # Special keys
-    bindkey "^M" z-skk-accept-line    # Enter
-    bindkey "^G" z-skk-keyboard-quit  # C-g
+    # Special keys - only bind if widgets exist
+    (( ${+widgets[z-skk-accept-line]} )) && bindkey "^M" z-skk-accept-line    # Enter
+    (( ${+widgets[z-skk-keyboard-quit]} )) && bindkey "^G" z-skk-keyboard-quit  # C-g
 
     # Mark as setup
     typeset -g Z_SKK_KEYBINDINGS_SETUP=1
