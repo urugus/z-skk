@@ -1,0 +1,86 @@
+#!/usr/bin/expect -f
+# expect を使った統合テスト
+# 注: expectがインストールされている環境でのみ動作
+
+set timeout 5
+set PROJECT_ROOT [file dirname [file dirname [file dirname [file normalize [info script]]]]]
+
+# テスト結果
+set test_count 0
+set pass_count 0
+set fail_count 0
+
+# アサーション関数
+proc assert_output {expected description} {
+    global test_count pass_count fail_count
+    incr test_count
+    
+    expect {
+        "*$expected*" {
+            incr pass_count
+            puts "  ✓ $description"
+        }
+        timeout {
+            incr fail_count
+            puts "  ✗ $description (timeout)"
+        }
+        default {
+            incr fail_count
+            puts "  ✗ $description"
+        }
+    }
+}
+
+# zshセッションを開始
+spawn zsh -f
+expect "$ " { send "PS1='$ '\r" }
+expect "$ "
+
+# z-skkプラグインを読み込み
+send "source '$PROJECT_ROOT/z-skk.plugin.zsh'\r"
+expect "$ "
+
+puts "=== Expect-based Integration Test ==="
+puts ""
+
+# Test 1: 英数入力（パススルー）
+puts "Test 1: ASCII passthrough"
+send "echo hello\r"
+assert_output "hello" "ASCII input passthrough"
+
+# Test 2: かなモード
+puts "\nTest 2: Hiragana mode"
+send "\x0a"  ;# C-j
+send "nihongo\r"
+assert_output "にほんご" "Hiragana input"
+
+# Test 3: 変換
+puts "\nTest 3: Conversion"
+send "\x0a"  ;# C-j
+send "Kanji "
+expect "*"
+send "\r"
+assert_output "漢字" "Kanji conversion"
+
+# Test 4: カタカナモード
+puts "\nTest 4: Katakana mode"
+send "\x0a"  ;# C-j
+send "q"
+send "katakana\r"
+assert_output "カタカナ" "Katakana input"
+
+# サマリー
+puts "\n=== Test Summary ==="
+puts "Total: $test_count"
+puts "Passed: $pass_count"
+puts "Failed: $fail_count"
+
+# 終了
+send "exit\r"
+expect eof
+
+if {$fail_count > 0} {
+    exit 1
+} else {
+    exit 0
+}

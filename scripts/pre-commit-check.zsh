@@ -65,6 +65,21 @@ else
 fi
 print ""
 
+# 6. Run integration tests (optional)
+print "6. Running integration tests (optional)..."
+if [[ -f "$PROJECT_DIR/tests/integration/run_integration_tests.zsh" ]]; then
+    if zsh "$PROJECT_DIR/tests/integration/run_integration_tests.zsh"; then
+        print "✓ All integration tests passed"
+    else
+        print "⚠ Integration tests failed (non-critical)"
+        print "  Note: Integration tests may fail in some environments"
+        print "  Please run them manually in an interactive terminal"
+    fi
+else
+    print "⚠ Integration tests not found (skipping)"
+fi
+print ""
+
 # Summary
 print "=== Pre-commit check summary ==="
 if [[ $ERRORS -eq 0 ]]; then

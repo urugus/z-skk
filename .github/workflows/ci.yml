@@ -19,6 +19,7 @@ jobs:
     - name: Make test files executable
       run: |
         chmod +x tests/*.zsh
+        chmod +x tests/integration/*.zsh || true
         find lib -name "*.zsh" -type f -exec chmod +x {} \;
         chmod +x scripts/*.zsh
         chmod +x z-skk.plugin.zsh
@@ -54,6 +55,20 @@ jobs:
       run: |
         if [[ -f tests/run_all.zsh ]]; then
           zsh tests/run_all.zsh
+        fi
+    
+    - name: Run integration tests (optional)
+      shell: bash
+      continue-on-error: true
+      run: |
+        if [[ -f tests/integration/run_integration_tests.zsh ]]; then
+          echo "=== Running integration tests ==="
+          echo "Note: Integration tests may fail in CI environment due to terminal limitations"
+          zsh tests/integration/run_integration_tests.zsh || {
+            echo "Integration tests failed with exit code $? (non-critical in CI)"
+          }
+        else
+          echo "Integration test runner not found, skipping"
         fi
 
   lint:
