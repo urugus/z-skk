@@ -38,10 +38,14 @@ z-skk-start-conversion() {
 _z-skk-perform-conversion() {
     local -a raw_candidates=()
 
-    # Clear display before lookup
-    z-skk-clear-marker "▽" ""
+    # Try to get candidates
+    raw_candidates=($(_z-skk-lookup-candidates "$Z_SKK_BUFFER" 2>/dev/null))
 
-    if raw_candidates=($(_z-skk-lookup-candidates "$Z_SKK_BUFFER")); then
+    # Check if we got any candidates
+    if [[ ${#raw_candidates[@]} -gt 0 ]]; then
+        # Clear display before showing candidates
+        z-skk-clear-marker "▽" ""
+
         # Prepare candidates for selection
         Z_SKK_CANDIDATES=($(_z-skk-prepare-candidates "${raw_candidates[@]}"))
 
@@ -51,6 +55,7 @@ _z-skk-perform-conversion() {
     fi
 
     # No candidates found - start registration mode
+    # Don't clear marker here - registration will handle display
     z-skk-start-registration "$Z_SKK_BUFFER"
 }
 

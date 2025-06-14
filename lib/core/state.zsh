@@ -55,7 +55,7 @@ z-skk-start-candidate-selection() {
     z-skk-set-converting-state 2
 }
 
-z-skk-start-registration() {
+z-skk-start-registration-mode() {
     z-skk-set-converting-state 3
 }
 

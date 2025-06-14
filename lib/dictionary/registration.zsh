@@ -19,8 +19,8 @@ z-skk-start-registration() {
     Z_SKK_REGISTER_READING="$reading"
     Z_SKK_REGISTER_CANDIDATE=""
 
-    # Clear any existing display
-    z-skk-clear-marker "▽" ""
+    # Clear conversion marker and show registration marker
+    z-skk-clear-marker "▽" "${reading}"
 
     # Show registration marker with closing bracket
     z-skk-add-marker "▼" "${reading}[]"
