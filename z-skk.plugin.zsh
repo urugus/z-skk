@@ -20,6 +20,9 @@ typeset -g Z_SKK_DIR="${0:A:h}"
     # Source core functionality (will be implemented)
     if [[ -f "$lib_dir/core/core.zsh" ]]; then
         source "$lib_dir/core/core.zsh"
+    else
+        print "z-skk: Error - core.zsh not found at $lib_dir/core/core.zsh" >&2
+        return 1
     fi
 
     # Initialize z-skk

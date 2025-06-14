@@ -19,7 +19,7 @@ jobs:
     - name: Make test files executable
       run: |
         chmod +x tests/*.zsh
-        chmod +x lib/*.zsh
+        find lib -name "*.zsh" -type f -exec chmod +x {} \;
         chmod +x scripts/*.zsh
         chmod +x z-skk.plugin.zsh
     
@@ -34,6 +34,15 @@ jobs:
     
     - name: Show zsh version
       run: zsh --version
+    
+    - name: Show directory structure
+      run: |
+        echo "=== Directory structure ==="
+        ls -la
+        echo "=== lib directory ==="
+        ls -la lib/ || echo "lib directory not found"
+        echo "=== lib subdirectories ==="
+        find lib -type d -name "*" | head -20
     
     - name: Run tests
       run: |
@@ -61,11 +70,8 @@ jobs:
     - name: Run shellcheck on zsh files
       shell: bash
       run: |
-        find . \( -name "*.zsh" -o -name "*.plugin.zsh" \) -type f | while read -r file; do
-          echo "Checking: $file"
-          # shellcheck doesn't fully support zsh, but we can check for common issues
-          shellcheck -s bash -e SC1071,SC1073,SC1072,SC2034,SC2154 "$file" || true
-        done
+        echo "Skipping shellcheck for zsh files (shellcheck doesn't fully support zsh syntax)"
+        # TODO: Consider using a zsh-specific linter in the future
     
     - name: Check file permissions
       shell: bash

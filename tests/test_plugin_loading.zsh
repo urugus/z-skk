@@ -8,6 +8,15 @@ typeset -g PROJECT_DIR="${TEST_DIR:h}"
 # Source test utilities
 source "$TEST_DIR/test_utils.zsh"
 
+# Debug: Show environment
+if [[ "${CI:-}" == "true" ]]; then
+    print "CI Environment detected"
+    print "PROJECT_DIR: $PROJECT_DIR"
+    print "PWD: $PWD"
+    ls -la "$PROJECT_DIR" | head -5
+    ls -la "$PROJECT_DIR/lib" | head -5
+fi
+
 # Test plugin file exists
 assert "[[ -f '$PROJECT_DIR/z-skk.plugin.zsh' ]]" "Plugin file exists"
 
