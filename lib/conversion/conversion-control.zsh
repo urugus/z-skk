@@ -7,6 +7,19 @@ z-skk-start-conversion() {
         return 1
     fi
 
+    # Complete any pending romaji conversion first
+    if [[ -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
+        # Force conversion of any remaining romaji
+        z-skk-convert-romaji
+        if [[ -n "$Z_SKK_CONVERTED" ]]; then
+            Z_SKK_BUFFER+="$Z_SKK_CONVERTED"
+        elif [[ -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
+            # If no conversion possible, append romaji as-is
+            Z_SKK_BUFFER+="$Z_SKK_ROMAJI_BUFFER"
+            Z_SKK_ROMAJI_BUFFER=""
+        fi
+    fi
+
     # Complete okurigana if in okurigana mode
     if (( ${+functions[z-skk-is-okurigana-mode]} )) && z-skk-is-okurigana-mode; then
         z-skk-complete-okurigana
