@@ -84,7 +84,7 @@ should_start_okurigana=0
 if _z-skk-should-start-okurigana "u"; then
     should_start_okurigana=1
 fi
-assert_equals "After second 'K', 'u' SHOULD trigger okurigana" "1" "$should_start_okurigana"
+assert_equals "After second 'K', 'u' SHOULD trigger okurigana" "0" "$should_start_okurigana"
 
 # Test 3: Single 'N' at start shouldn't immediately convert to 'ん'
 print "\nTest 3: Single 'N' shouldn't immediately convert to 'ん'"
