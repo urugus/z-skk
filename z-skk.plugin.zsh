@@ -27,15 +27,13 @@ typeset -g Z_SKK_DIR="${0:A:h}"
         z-skk-init
     else
         # Only show message if debug is enabled
-        if [[ -n "${Z_SKK_DEBUG:-}" ]]; then
+        if [[ "${Z_SKK_DEBUG:-0}" == "1" ]]; then
             print "z-skk: Loaded (v${Z_SKK_VERSION})"
         fi
     fi
 
     # Export setup function for external use
-    if (( ${+functions[z-skk-setup-keybindings]} )); then
-        typeset -gf z-skk-setup-keybindings
-    fi
+    # Note: typeset -gf is not needed here as the function is already global
 }
 
 # Cleanup function for unloading

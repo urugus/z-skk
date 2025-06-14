@@ -212,7 +212,7 @@ z-skk-init() {
 
     (( ${+functions[z-skk-debug]} )) && z-skk-debug "Initialization complete"
     # Suppress initialization message unless debug is enabled
-    if [[ -n "${Z_SKK_DEBUG:-}" ]]; then
+    if [[ "${Z_SKK_DEBUG:-0}" == "1" ]]; then
         print "z-skk: Initialized (v${Z_SKK_VERSION})"
     fi
     return 0
