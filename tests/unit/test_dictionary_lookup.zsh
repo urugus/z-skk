@@ -2,7 +2,7 @@
 # Test dictionary functionality
 
 # Test framework setup
-typeset -g TEST_DIR="${0:A:h}"
+typeset -g TEST_DIR="${0:A:h:h}"
 typeset -g PROJECT_DIR="${TEST_DIR:h}"
 
 # Source test utilities

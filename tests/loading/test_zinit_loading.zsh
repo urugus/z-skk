@@ -8,7 +8,7 @@ typeset -g ZINIT_HOME="/tmp/zinit-test"
 typeset -g ZPFX="/tmp/zinit-test/polaris"
 
 # Get absolute path to our plugin
-typeset -g PLUGIN_DIR="${0:A:h:h}"
+typeset -g PLUGIN_DIR="${0:A:h:h:h}"
 
 # Source the plugin (simulating zinit load)
 print "Loading plugin from: $PLUGIN_DIR"

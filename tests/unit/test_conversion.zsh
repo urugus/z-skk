@@ -1,15 +1,27 @@
 #!/usr/bin/env zsh
-# Test conversion start functionality
+# Comprehensive unit tests for conversion functionality
+# This file merges all conversion-related tests from:
+# - test_conversion.zsh (romaji to hiragana conversion)
+# - test_full_conversion.zsh (full conversion flow)
+# - test_conversion_start.zsh (conversion start functionality)
 
 # Test framework setup
-typeset -g TEST_DIR="${0:A:h}"
+typeset -g TEST_DIR="${0:A:h:h}"
 typeset -g PROJECT_DIR="${TEST_DIR:h}"
 
 # Source test utilities
 source "$TEST_DIR/test_utils.zsh"
 
-# Load the plugin
+# Source the plugin
 source "$PROJECT_DIR/z-skk.plugin.zsh"
+
+# Force load registration module for testing
+if (( ${+functions[z-skk-lazy-load-module]} )); then
+    z-skk-lazy-load-module "registration"
+else
+    # Fallback: source directly
+    source "$PROJECT_DIR/lib/dictionary/registration.zsh"
+fi
 
 # Mock ZLE functions for testing
 zle() {
@@ -23,6 +35,68 @@ zle() {
 # Mock LBUFFER and RBUFFER
 typeset -g LBUFFER=""
 typeset -g RBUFFER=""
+
+# =============================================================================
+# Section 1: Romaji to Hiragana Conversion Tests
+# =============================================================================
+
+print_section "Romaji to Hiragana Conversion"
+
+# Test conversion table exists
+assert "[[ -n \${Z_SKK_ROMAJI_TO_HIRAGANA+x} ]]" "Z_SKK_ROMAJI_TO_HIRAGANA table exists"
+assert "[[ \${(t)Z_SKK_ROMAJI_TO_HIRAGANA} == association* ]]" "Z_SKK_ROMAJI_TO_HIRAGANA is associative array"
+
+# Test single vowel conversions
+assert_equals "Convert 'a' to 'あ'" "あ" "${Z_SKK_ROMAJI_TO_HIRAGANA[a]}"
+assert_equals "Convert 'i' to 'い'" "い" "${Z_SKK_ROMAJI_TO_HIRAGANA[i]}"
+assert_equals "Convert 'u' to 'う'" "う" "${Z_SKK_ROMAJI_TO_HIRAGANA[u]}"
+assert_equals "Convert 'e' to 'え'" "え" "${Z_SKK_ROMAJI_TO_HIRAGANA[e]}"
+assert_equals "Convert 'o' to 'お'" "お" "${Z_SKK_ROMAJI_TO_HIRAGANA[o]}"
+
+# Test basic consonant + vowel combinations
+assert_equals "Convert 'ka' to 'か'" "か" "${Z_SKK_ROMAJI_TO_HIRAGANA[ka]}"
+assert_equals "Convert 'ki' to 'き'" "き" "${Z_SKK_ROMAJI_TO_HIRAGANA[ki]}"
+assert_equals "Convert 'ku' to 'く'" "く" "${Z_SKK_ROMAJI_TO_HIRAGANA[ku]}"
+assert_equals "Convert 'ke' to 'け'" "け" "${Z_SKK_ROMAJI_TO_HIRAGANA[ke]}"
+assert_equals "Convert 'ko' to 'こ'" "こ" "${Z_SKK_ROMAJI_TO_HIRAGANA[ko]}"
+
+# Test 'n' conversion
+assert_equals "Convert 'n' to 'ん'" "ん" "${Z_SKK_ROMAJI_TO_HIRAGANA[n]}"
+assert_equals "Convert 'nn' to 'ん'" "ん" "${Z_SKK_ROMAJI_TO_HIRAGANA[nn]}"
+
+# Test special cases
+assert_equals "Convert 'shi' to 'し'" "し" "${Z_SKK_ROMAJI_TO_HIRAGANA[shi]}"
+assert_equals "Convert 'chi' to 'ち'" "ち" "${Z_SKK_ROMAJI_TO_HIRAGANA[chi]}"
+assert_equals "Convert 'tsu' to 'つ'" "つ" "${Z_SKK_ROMAJI_TO_HIRAGANA[tsu]}"
+
+# Test conversion function
+assert "(( \${+functions[z-skk-convert-romaji]} ))" "z-skk-convert-romaji function exists"
+
+# Test romaji buffer management
+assert "[[ -n \${Z_SKK_ROMAJI_BUFFER+x} ]]" "Z_SKK_ROMAJI_BUFFER variable exists"
+
+# Test conversion logic
+Z_SKK_ROMAJI_BUFFER="a"
+z-skk-convert-romaji
+assert_equals "Convert buffer 'a' to 'あ'" "あ" "$Z_SKK_CONVERTED"
+assert_equals "Romaji buffer cleared after conversion" "" "$Z_SKK_ROMAJI_BUFFER"
+
+Z_SKK_ROMAJI_BUFFER="ka"
+z-skk-convert-romaji
+assert_equals "Convert buffer 'ka' to 'か'" "か" "$Z_SKK_CONVERTED"
+assert_equals "Romaji buffer cleared after conversion" "" "$Z_SKK_ROMAJI_BUFFER"
+
+# Test partial matches
+Z_SKK_ROMAJI_BUFFER="k"
+z-skk-convert-romaji
+assert_equals "Partial match 'k' returns empty" "" "$Z_SKK_CONVERTED"
+assert_equals "Romaji buffer keeps 'k' for partial match" "k" "$Z_SKK_ROMAJI_BUFFER"
+
+# =============================================================================
+# Section 2: Conversion Start Functionality Tests
+# =============================================================================
+
+print_section "Conversion Start Functionality"
 
 # Test uppercase detection starts conversion
 test_uppercase_starts_conversion() {
@@ -240,7 +314,7 @@ test_mixed_case_sakashita() {
     assert "true" "Space key handled without error"
 }
 
-# Run tests
+# Run conversion start tests
 test_uppercase_starts_conversion
 test_lowercase_no_conversion
 test_conversion_buffer_accumulation
@@ -251,7 +325,148 @@ test_enter_during_conversion
 test_space_with_pending_romaji
 test_mixed_case_sakashita
 
+# =============================================================================
+# Section 3: Full Conversion Flow Tests
+# =============================================================================
+
+print_section "Full Conversion Flow"
+
+# Test full conversion flow
+test_full_conversion_flow() {
+    # Reset state
+    z-skk-hiragana-mode
+    Z_SKK_CONVERTING=0
+    Z_SKK_BUFFER=""
+    Z_SKK_ROMAJI_BUFFER=""
+    Z_SKK_CANDIDATES=()
+    Z_SKK_CANDIDATE_INDEX=0
+    LBUFFER=""
+    RBUFFER=""
+
+    # Input "Kanji" to start conversion
+    _z-skk-handle-hiragana-input "K"
+    assert_equals "Conversion started" "1" "$Z_SKK_CONVERTING"
+
+    _z-skk-handle-hiragana-input "a"
+    assert_equals "Buffer has か" "か" "$Z_SKK_BUFFER"
+
+    _z-skk-handle-hiragana-input "n"
+    _z-skk-handle-hiragana-input "j"
+    _z-skk-handle-hiragana-input "i"
+    assert_equals "Buffer has かんじ" "かんじ" "$Z_SKK_BUFFER"
+
+    # Press Space to start conversion
+    _z-skk-handle-converting-input " "
+    assert_equals "Moved to candidate selection" "2" "$Z_SKK_CONVERTING"
+    assert '[[ ${#Z_SKK_CANDIDATES[@]} -gt 0 ]]' "Has candidates"
+    assert_equals "First candidate is 漢字" "漢字" "${Z_SKK_CANDIDATES[1]}"
+}
+
+# Test candidate navigation
+test_candidate_navigation() {
+    # Setup: already in candidate selection mode
+    z-skk-hiragana-mode
+    Z_SKK_CONVERTING=2
+    Z_SKK_BUFFER="かんじ"
+    Z_SKK_CANDIDATES=("漢字" "感じ" "幹事")
+    Z_SKK_CANDIDATE_INDEX=0
+    LBUFFER=""
+    RBUFFER=""
+
+    # Initial candidate
+    assert_equals "Initial candidate index" "0" "$Z_SKK_CANDIDATE_INDEX"
+
+    # Press Space to go to next
+    z-skk-next-candidate
+    assert_equals "Next candidate index" "1" "$Z_SKK_CANDIDATE_INDEX"
+
+    # Press Space again
+    z-skk-next-candidate
+    assert_equals "Next candidate index" "2" "$Z_SKK_CANDIDATE_INDEX"
+
+    # Press Space to wrap around
+    z-skk-next-candidate
+    assert_equals "Wrapped to first" "0" "$Z_SKK_CANDIDATE_INDEX"
+
+    # Press x to go back
+    z-skk-previous-candidate
+    assert_equals "Previous wraps to last" "2" "$Z_SKK_CANDIDATE_INDEX"
+}
+
+# Test candidate confirmation
+test_candidate_confirmation() {
+    # Setup
+    z-skk-hiragana-mode
+    Z_SKK_CONVERTING=2
+    Z_SKK_BUFFER="かんじ"
+    Z_SKK_CANDIDATES=("漢字" "感じ" "幹事")
+    Z_SKK_CANDIDATE_INDEX=1
+    LBUFFER="test"
+    RBUFFER=""
+
+    # Confirm with Enter
+    z-skk-confirm-candidate
+
+    assert_equals "Conversion completed" "0" "$Z_SKK_CONVERTING"
+    assert_equals "Buffer cleared" "" "$Z_SKK_BUFFER"
+    assert_equals "LBUFFER has selected candidate" "test感じ" "$LBUFFER"
+}
+
+# Test conversion cancellation
+test_conversion_cancellation() {
+    # Setup
+    z-skk-hiragana-mode
+    Z_SKK_CONVERTING=2
+    Z_SKK_BUFFER="かんじ"
+    Z_SKK_CANDIDATES=("漢字" "感じ" "幹事")
+    Z_SKK_CANDIDATE_INDEX=1
+    LBUFFER="test"
+    RBUFFER=""
+
+    # Cancel with C-g
+    z-skk-cancel-conversion
+
+    assert_equals "Conversion cancelled" "0" "$Z_SKK_CONVERTING"
+    assert_equals "Buffer cleared" "" "$Z_SKK_BUFFER"
+    assert_equals "LBUFFER has original text" "testかんじ" "$LBUFFER"
+}
+
+# Test word with no candidates
+test_no_candidates() {
+    # Reset state
+    z-skk-hiragana-mode
+    Z_SKK_CONVERTING=1
+    Z_SKK_BUFFER="ないよ"
+    Z_SKK_ROMAJI_BUFFER=""
+    LBUFFER="test"
+    RBUFFER=""
+
+    # Try to convert
+    z-skk-start-conversion
+
+    # Should enter registration mode since no candidates
+    assert_equals "Registration mode started" "1" "$Z_SKK_REGISTERING"
+    assert_equals "Registration reading" "ないよ" "$Z_SKK_REGISTER_READING"
+
+    # Cancel registration to get original text
+    z-skk-cancel-registration
+    assert_equals "Registration cancelled" "0" "$Z_SKK_REGISTERING"
+    assert_equals "LBUFFER has original text" "testないよ" "$LBUFFER"
+}
+
+# Run full conversion flow tests
+test_full_conversion_flow
+test_candidate_navigation
+test_candidate_confirmation
+test_conversion_cancellation
+test_no_candidates
+
+# =============================================================================
+# Cleanup
+# =============================================================================
+
 # Cleanup
 unfunction zle 2>/dev/null || true
 
+# Print final summary
 print_test_summary

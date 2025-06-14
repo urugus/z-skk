@@ -4,10 +4,10 @@
 
 # Test framework setup
 typeset -g TEST_DIR="${0:A:h}"
-typeset -g PROJECT_DIR="${TEST_DIR:h}"
+typeset -g PROJECT_DIR="${TEST_DIR:h:h}"  # Go up two directories to get to project root
 
-# Source test utilities
-source "$TEST_DIR/test_utils.zsh"
+# Source test utilities (from parent tests directory)
+source "${TEST_DIR:h}/test_utils.zsh"
 
 # Source the plugin
 source "$PROJECT_DIR/z-skk.plugin.zsh"

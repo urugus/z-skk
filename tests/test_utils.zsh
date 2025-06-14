@@ -53,3 +53,15 @@ print_test_summary() {
     # Return appropriate exit code
     [[ $TESTS_FAILED -eq 0 ]]
 }
+
+# Print section header
+print_section() {
+    local title="$1"
+    print "\n--- $title ---"
+}
+
+# Print main header
+print_header() {
+    local title="$1"
+    print "\n========== $title =========="
+}

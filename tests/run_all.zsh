@@ -1,68 +1,103 @@
 #!/usr/bin/env zsh
 # Run all tests
 
-typeset -g SCRIPT_DIR="${0:A:h}"
+typeset -g TEST_DIR="${0:A:h}"
+typeset -g PROJECT_DIR="${TEST_DIR:h}"
 typeset -g TOTAL_PASSED=0
 typeset -g TOTAL_FAILED=0
+typeset -g TOTAL_SKIPPED=0
 typeset -A TEST_RESULTS
+
+# Color definitions
+typeset -g RED='\033[0;31m'
+typeset -g GREEN='\033[0;32m'
+typeset -g YELLOW='\033[0;33m'
+typeset -g RESET='\033[0m'
 
 print "=== Running all z-skk tests ===\n"
 
-# Find and run all test files
-for test_file in "$SCRIPT_DIR"/test_*.zsh; do
-    if [[ -f "$test_file" && "$test_file" != "$0" ]]; then
-        test_name="${test_file:t}"
+# Function to run a single test
+run_test() {
+    local test_file="$1"
+    local test_name="${test_file:t}"
 
-        # Skip interactive tests
-        if [[ "$test_name" == "test_interactive.zsh" || "$test_name" == "manual_test.zsh" ]]; then
-            print "Skipping interactive test: $test_name"
-            continue
-        fi
-
-        # Skip display test due to RPROMPT/precmd_functions limitations in non-interactive shell
-        if [[ "$test_name" == "test_display.zsh" ]]; then
-            print "Skipping display test in non-interactive shell: $test_name"
-            TEST_RESULTS[$test_name]="SKIPPED"
-            continue
-        fi
-
-        # Skip new tests until they are stabilized
-        if [[ "$test_name" == "test_input.zsh" || "$test_name" == "test_error.zsh" ]]; then
-            print "Skipping experimental test: $test_name"
-            TEST_RESULTS[$test_name]="SKIPPED"
-            continue
-        fi
-
-        print "Running: $test_name"
-        print "---"
-
-        # Run test and capture result
-        if zsh "$test_file"; then
-            TEST_RESULTS[$test_name]="PASSED"
-        else
-            TEST_RESULTS[$test_name]="FAILED"
-            (( TOTAL_FAILED++ ))
-        fi
-
-        print "\n"
+    # Skip interactive and manual tests
+    if [[ "$test_name" =~ "^(test_interactive|manual_)" ]]; then
+        print "${YELLOW}Skipping interactive/manual test: $test_name${RESET}"
+        TEST_RESULTS[$test_name]="SKIPPED"
+        (( TOTAL_SKIPPED++ ))
+        return
     fi
-done
+
+    print "Running: $test_name"
+    print "---"
+
+    # Run test and capture result
+    if zsh "$test_file"; then
+        TEST_RESULTS[$test_name]="PASSED"
+        (( TOTAL_PASSED++ ))
+    else
+        TEST_RESULTS[$test_name]="FAILED"
+        (( TOTAL_FAILED++ ))
+    fi
+
+    print ""
+}
+
+# Function to run tests in a directory
+run_tests_in_dir() {
+    local dir="$1"
+    local pattern="${2:-test_*.zsh}"
+    
+    for test_file in "$dir"/$~pattern; do
+        [[ -f "$test_file" ]] || continue
+        run_test "$test_file"
+    done
+}
+
+# Run unit tests
+if [[ -d "$TEST_DIR/unit" ]]; then
+    echo "\n${YELLOW}Running Unit Tests...${RESET}"
+    run_tests_in_dir "$TEST_DIR/unit"
+fi
+
+# Run integration tests
+if [[ -d "$TEST_DIR/integration" ]]; then
+    echo "\n${YELLOW}Running Integration Tests...${RESET}"
+    run_tests_in_dir "$TEST_DIR/integration" "test_*.zsh"
+fi
+
+# Run regression tests
+if [[ -d "$TEST_DIR/regression" ]]; then
+    echo "\n${YELLOW}Running Regression Tests...${RESET}"
+    run_tests_in_dir "$TEST_DIR/regression"
+fi
+
+# Run loading tests
+if [[ -d "$TEST_DIR/loading" ]]; then
+    echo "\n${YELLOW}Running Loading Tests...${RESET}"
+    run_tests_in_dir "$TEST_DIR/loading"
+fi
+
+# Run tests in root directory (for backward compatibility)
+echo "\n${YELLOW}Running Root Tests...${RESET}"
+run_tests_in_dir "$TEST_DIR"
 
 # Summary
-print "=== Test Summary ==="
+print "\n=== Test Summary ==="
 for test_name result in ${(kv)TEST_RESULTS}; do
     if [[ "$result" == "PASSED" ]]; then
-        print "✓ $test_name"
-        (( TOTAL_PASSED++ ))
+        print "${GREEN}✓ $test_name${RESET}"
     elif [[ "$result" == "SKIPPED" ]]; then
-        print "⚬ $test_name (skipped)"
+        print "${YELLOW}⚬ $test_name (skipped)${RESET}"
     else
-        print "✗ $test_name"
+        print "${RED}✗ $test_name${RESET}"
     fi
 done
 
-print "\nTotal Passed: $TOTAL_PASSED"
-print "Total Failed: $TOTAL_FAILED"
+print "\nTotal Passed: ${GREEN}$TOTAL_PASSED${RESET}"
+print "Total Failed: ${RED}$TOTAL_FAILED${RESET}"
+print "Total Skipped: ${YELLOW}$TOTAL_SKIPPED${RESET}"
 print "==================="
 
 # Exit with failure if any tests failed
