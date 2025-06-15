@@ -94,7 +94,7 @@ typeset -gA Z_SKK_MODULES=(
     [display-api]="required"  # Centralized display API
 
     # Lazy-loaded modules (not loaded at startup)
-    [dictionary-io]="lazy"  # Loaded when needed
+    [dictionary-io]="required"  # Now required for proper initialization
     [registration]="lazy"   # Loaded when needed
     [okurigana]="lazy"      # Loaded when needed
     [input-modes]="lazy"    # Loaded when needed
@@ -102,7 +102,7 @@ typeset -gA Z_SKK_MODULES=(
 )
 
 # Module loading order (important for dependencies)
-# Note: Lazy-loaded modules (dictionary-io, registration, okurigana, input-modes, special-keys)
+# Note: Lazy-loaded modules (registration, okurigana, input-modes, special-keys)
 # are NOT included here as they will be loaded on demand
 typeset -ga Z_SKK_MODULE_ORDER=(
     # Base infrastructure (no dependencies)
@@ -112,7 +112,7 @@ typeset -ga Z_SKK_MODULE_ORDER=(
     # Display system (needed by many modules)
     display display-api
     # Core systems
-    reset state dictionary modes
+    reset state dictionary dictionary-io modes
     # Optional modules
     command-dispatch
     # Conversion modules (split for modularity)
@@ -225,8 +225,12 @@ _z-skk-post-load-init() {
         z-skk-init-dictionary
     fi
 
-    # Dictionary file loading is now lazy - will be loaded when first needed
-    # This avoids startup delays from reading potentially large dictionary files
+    # Load dictionary files synchronously during initialization
+    if (( ${+functions[z-skk-init-dictionary-loading]} )); then
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Loading dictionary files"
+        z-skk-init-dictionary-loading
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Dictionary loading completed"
+    fi
 
     # Setup display
     if (( ${+functions[z-skk-display-setup]} )); then

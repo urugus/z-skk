@@ -106,6 +106,24 @@ test_okurigana_conversion() {
     assert_equals "First candidate" "送り" "${Z_SKK_CANDIDATES[1]}"
 }
 
+# Test SKK okuri-ari format lookup (NEW)
+test_okuri_ari_format_lookup() {
+    # Add SKK format okuri-ari entry
+    Z_SKK_DICTIONARY=()
+    Z_SKK_DICTIONARY[おくr]="送る/贈る"
+    Z_SKK_DICTIONARY[かえs]="返す/帰す"
+    
+    # Test lookup with okurigana
+    local result=$(z-skk-lookup-with-okurigana "おく" "る")
+    assert '[[ -n "$result" ]]' "Found okuri-ari entry"
+    assert '[[ "$result" == *"送る"* ]]' "Contains 送る"
+    
+    # Test with different okurigana  
+    local result2=$(z-skk-lookup-with-okurigana "かえ" "す")
+    assert '[[ -n "$result2" ]]' "Found かえs entry"
+    assert '[[ "$result2" == *"返す"* ]]' "Contains 返す"
+}
+
 # Test okurigana display
 test_okurigana_display() {
     # Reset state
@@ -148,6 +166,7 @@ test_okurigana_key_building
 test_okurigana_lookup
 test_okurigana_input_processing
 test_okurigana_conversion
+test_okuri_ari_format_lookup
 test_okurigana_display
 test_okurigana_reset
 

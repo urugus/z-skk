@@ -78,6 +78,39 @@ z-skk-lookup-with-okurigana() {
         return 0
     fi
 
+    # Try SKK okuri-ari format (reading + romaji marker)
+    # Get the first romaji character of the okurigana
+    local okurigana_marker=""
+    if [[ -n "$okurigana" ]]; then
+        # Convert first kana of okurigana to romaji marker
+        # This is a simple mapping for common cases
+        case "${okurigana:0:1}" in
+            さ|し|す|せ|そ) okurigana_marker="s" ;;
+            か|き|く|け|こ) okurigana_marker="k" ;;
+            た|ち|つ|て|と) okurigana_marker="t" ;;
+            な|に|ぬ|ね|の) okurigana_marker="n" ;;
+            は|ひ|ふ|へ|ほ) okurigana_marker="h" ;;
+            ま|み|む|め|も) okurigana_marker="m" ;;
+            や|ゆ|よ) okurigana_marker="y" ;;
+            ら|り|る|れ|ろ) okurigana_marker="r" ;;
+            わ|を|ん) okurigana_marker="w" ;;
+            が|ぎ|ぐ|げ|ご) okurigana_marker="g" ;;
+            ざ|じ|ず|ぜ|ぞ) okurigana_marker="z" ;;
+            だ|ぢ|づ|で|ど) okurigana_marker="d" ;;
+            ば|び|ぶ|べ|ぼ) okurigana_marker="b" ;;
+            ぱ|ぴ|ぷ|ぺ|ぽ) okurigana_marker="p" ;;
+            あ|い|う|え|お) okurigana_marker="a" ;;
+        esac
+        
+        if [[ -n "$okurigana_marker" ]]; then
+            local okuri_key="${reading}${okurigana_marker}"
+            if entry=$(z-skk-lookup "$okuri_key"); then
+                echo "$entry"
+                return 0
+            fi
+        fi
+    fi
+
     # Try without okurigana marker as fallback
     if entry=$(z-skk-lookup "$reading"); then
         # Filter candidates that could match with okurigana

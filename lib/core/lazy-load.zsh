@@ -56,27 +56,7 @@ z-skk-lazy-load() {
 # Define lazy-loaded function stubs
 # These will load the actual module when first called
 
-# Dictionary I/O functions
-z-skk-load-dictionary-file() {
-    z-skk-lazy-load "dictionary-io" && z-skk-load-dictionary-file "$@"
-}
-
-z-skk-save-user-dictionary() {
-    z-skk-lazy-load "dictionary-io" && z-skk-save-user-dictionary "$@"
-}
-
-z-skk-add-user-entry() {
-    z-skk-lazy-load "dictionary-io" && z-skk-add-user-entry "$@"
-}
-
-z-skk-init-dictionary-loading() {
-    z-skk-lazy-load "dictionary-io" && z-skk-init-dictionary-loading "$@"
-}
-
-# Internal function for testing
-_z-skk-parse-dict-line() {
-    z-skk-lazy-load "dictionary-io" && _z-skk-parse-dict-line "$@"
-}
+# Dictionary I/O functions are now loaded at startup, not lazy-loaded
 
 # Registration functions
 z-skk-start-registration() {

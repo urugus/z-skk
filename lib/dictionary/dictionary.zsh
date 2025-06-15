@@ -26,18 +26,44 @@ z-skk-split-candidates() {
     print -l "${candidates[@]}"
 }
 
-# Lookup word in dictionary
+# Lookup word in dictionary with unified search
 z-skk-lookup() {
     local reading="$1"
-
-    # Check if reading exists in dictionary
+    local -a all_candidates=()
+    local -A seen_candidates=()
+    
+    # First check user dictionary (highest priority)
+    if [[ -n "${Z_SKK_USER_DICTIONARY[$reading]}" ]]; then
+        local -a user_candidates=("${(@s:/:)Z_SKK_USER_DICTIONARY[$reading]}")
+        for cand in "${user_candidates[@]}"; do
+            local base_word="${cand%%[;:]*}"
+            if [[ -z "${seen_candidates[$base_word]}" ]]; then
+                all_candidates+=("$cand")
+                seen_candidates[$base_word]=1
+            fi
+        done
+    fi
+    
+    # Then check main dictionary (includes built-in and loaded system dictionaries)
     if [[ -n "${Z_SKK_DICTIONARY[$reading]}" ]]; then
-        # Return the entry
-        print "${Z_SKK_DICTIONARY[$reading]}"
+        local -a main_candidates=("${(@s:/:)Z_SKK_DICTIONARY[$reading]}")
+        for cand in "${main_candidates[@]}"; do
+            local base_word="${cand%%[;:]*}"
+            if [[ -z "${seen_candidates[$base_word]}" ]]; then
+                all_candidates+=("$cand")
+                seen_candidates[$base_word]=1
+            fi
+        done
+    fi
+    
+    # Return combined results
+    if [[ ${#all_candidates[@]} -gt 0 ]]; then
+        local IFS="/"
+        print "${all_candidates[*]}"
         return 0
     fi
-
-    # Not found
+    
+    # Not found in any dictionary
     return 1
 }
 

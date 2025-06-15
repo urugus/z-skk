@@ -36,6 +36,16 @@ test_parse_dict_line() {
     # Invalid format
     _z-skk-parse-dict-line "invalid line" >/dev/null 2>&1
     assert_equals "Skip invalid" "1" "$?"
+    
+    # Okuri-ari format (NEW)
+    local okuri_result=($(_z-skk-parse-dict-line "おくr /送る/贈る/"))
+    assert_equals "Parse okuri-ari reading" "おくr" "${okuri_result[1]}"
+    assert_equals "Parse okuri-ari candidates" "送る/贈る" "${okuri_result[2]}"
+    
+    # Extra spaces handling (NEW)
+    local space_result=($(_z-skk-parse-dict-line "さとう /砂糖/佐藤/"))
+    assert_equals "Parse with spaces" "さとう" "${space_result[1]}"
+    assert_equals "Parse candidates with spaces" "砂糖/佐藤" "${space_result[2]}"
 }
 
 # Test dictionary file loading
@@ -129,6 +139,66 @@ EOF
     # Check if loaded
     assert '[[ -n "${Z_SKK_DICTIONARY[ゆーざー]}" ]]' "User dict loaded"
     assert_equals "User entry" "ユーザー/user" "${Z_SKK_DICTIONARY[ゆーざー]}"
+    
+    # Check loading status flag (NEW)
+    assert_equals "Dictionary loaded flag" "1" "$Z_SKK_DICTIONARY_LOADED"
+}
+
+# Test dictionary loading with limits (NEW)
+test_dictionary_loading_limits() {
+    # Create large test dictionary
+    local large_dict="$TEST_DICT_DIR/large.jisyo"
+    {
+        echo ";; Large dictionary"
+        for i in {1..100}; do
+            echo "てすと$i /テスト$i/"
+        done
+    } > "$large_dict"
+    
+    # Test with limit
+    Z_SKK_DICTIONARY=()
+    Z_SKK_MAX_LOAD_ENTRIES=10
+    z-skk-load-dictionary-file "$large_dict"
+    
+    # Count loaded entries
+    local count=0
+    for key in ${(k)Z_SKK_DICTIONARY}; do
+        if [[ "$key" == てすと* ]]; then
+            ((count++))
+        fi
+    done
+    
+    assert_equals "Limited entries loaded" "10" "$count"
+    
+    # Reset limit
+    unset Z_SKK_MAX_LOAD_ENTRIES
+}
+
+# Test unified dictionary search (NEW)
+test_unified_dictionary_search() {
+    # Setup multiple dictionaries
+    Z_SKK_DICTIONARY=()
+    Z_SKK_USER_DICTIONARY=()
+    
+    # Add to main dictionary
+    Z_SKK_DICTIONARY[しんぷる]="簡単/単純"
+    
+    # Add to user dictionary with overlap
+    Z_SKK_USER_DICTIONARY[しんぷる]="シンプル"
+    Z_SKK_USER_DICTIONARY[ゆーざー]="ユーザー"
+    
+    # Test unified lookup
+    local result=$(z-skk-lookup "しんぷる")
+    assert '[[ "$result" == *"シンプル"* ]]' "User dict priority"
+    assert '[[ "$result" == *"簡単"* ]]' "Main dict included"
+    
+    # Test user-only entry
+    local user_result=$(z-skk-lookup "ゆーざー")
+    assert_equals "User-only lookup" "ユーザー" "$user_result"
+    
+    # Test non-existent
+    z-skk-lookup "そんざいしない" >/dev/null 2>&1
+    assert_equals "Non-existent lookup" "1" "$?"
 }
 
 # Run tests
@@ -137,6 +207,8 @@ test_load_dictionary_file
 test_save_user_dictionary
 test_add_user_entry
 test_init_dictionary_loading
+test_dictionary_loading_limits
+test_unified_dictionary_search
 
 # Cleanup
 rm -rf "$TEST_DICT_DIR"
