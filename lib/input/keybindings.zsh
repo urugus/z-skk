@@ -99,12 +99,26 @@ z-skk-register-widgets() {
 
     # Check if zle is available
     if ! (( ${+builtins[zle]} )); then
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "ZLE not available, skipping widget registration"
         return 0
     fi
 
+    # Debug: Check which functions exist
+    (( ${+functions[z-skk-debug]} )) && z-skk-debug "Registering widgets..."
+
     # Register widgets only if the functions exist
-    (( ${+functions[z-skk-self-insert]} )) && zle -N z-skk-self-insert
-    (( ${+functions[z-skk-toggle-kana]} )) && zle -N z-skk-toggle-kana
+    if (( ${+functions[z-skk-self-insert]} )); then
+        zle -N z-skk-self-insert
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Registered widget: z-skk-self-insert"
+    fi
+
+    if (( ${+functions[z-skk-toggle-kana]} )); then
+        zle -N z-skk-toggle-kana
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Registered widget: z-skk-toggle-kana"
+    else
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Function z-skk-toggle-kana not found!"
+    fi
+
     (( ${+functions[z-skk-ascii-mode]} )) && zle -N z-skk-ascii-mode
     (( ${+functions[z-skk-hiragana-mode]} )) && zle -N z-skk-hiragana-mode
     (( ${+functions[z-skk-katakana-mode]} )) && zle -N z-skk-katakana-mode
@@ -114,6 +128,7 @@ z-skk-register-widgets() {
 
     # Mark as registered
     typeset -g Z_SKK_WIDGETS_REGISTERED=1
+    (( ${+functions[z-skk-debug]} )) && z-skk-debug "Widget registration complete"
 }
 
 # Setup keybindings
@@ -137,7 +152,18 @@ z-skk-setup-keybindings() {
     done
 
     # Mode switching keys - only bind if widgets exist
-    (( ${+widgets[z-skk-toggle-kana]} )) && bindkey "^J" z-skk-toggle-kana    # Toggle hiragana/ascii
+    if (( ${+widgets[z-skk-toggle-kana]} )); then
+        bindkey "^J" z-skk-toggle-kana    # Toggle hiragana/ascii
+    else
+        # Debug: widget not found, try to register it
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Widget z-skk-toggle-kana not found during keybinding setup"
+        # Try to register the widget if the function exists
+        if (( ${+functions[z-skk-toggle-kana]} )); then
+            zle -N z-skk-toggle-kana
+            bindkey "^J" z-skk-toggle-kana
+            (( ${+functions[z-skk-debug]} )) && z-skk-debug "Registered and bound z-skk-toggle-kana to ^J"
+        fi
+    fi
     (( ${+widgets[z-skk-ascii-mode]} )) && bindkey "^L" z-skk-ascii-mode     # Force ASCII mode
     (( ${+widgets[z-skk-zenkaku-mode]} )) && bindkey "^Q" z-skk-zenkaku-mode   # Zenkaku (full-width) mode
 
@@ -150,19 +176,22 @@ z-skk-setup-keybindings() {
 }
 
 # Initialize keybindings
-# For interactive shells, register widgets but delay keybinding setup
-if [[ -o interactive ]]; then
-    z-skk-register-widgets
-    # Don't setup keybindings immediately to avoid "undefined-key" errors
-    # They will be setup on first line edit via zle-line-init
-fi
+# Widgets and keybindings will be set up via zle-line-init and precmd hooks
+# to ensure zle is fully initialized
 
-# For non-interactive shells (like when loaded by zinit),
-# setup keybindings on first line edit
+# Setup keybindings on first line edit to ensure zle is ready
 z-skk-line-init() {
     # Register widgets and setup keybindings if not already done
-    z-skk-register-widgets
-    z-skk-setup-keybindings
+    if [[ -z "${Z_SKK_KEYBINDINGS_SETUP:-}" ]]; then
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Running zle-line-init setup"
+        z-skk-register-widgets
+        z-skk-setup-keybindings
+
+        # Verify Ctrl+J is bound
+        if [[ "$(bindkey '^J' 2>/dev/null)" != *"z-skk-toggle-kana"* ]]; then
+            (( ${+functions[z-skk-debug]} )) && z-skk-debug "Warning: Ctrl+J binding failed"
+        fi
+    fi
 
     # Call original zle-line-init if it exists
     if (( ${+functions[_z-skk-orig-line-init]} )); then
@@ -170,7 +199,13 @@ z-skk-line-init() {
     fi
 }
 
-# Only setup zle-line-init in interactive shells
+# Alternative setup function that can be called manually if needed
+z-skk-setup() {
+    z-skk-register-widgets
+    z-skk-setup-keybindings
+}
+
+# Only setup hooks in interactive shells
 if [[ -o interactive ]]; then
     # Save original zle-line-init if it exists
     if (( ${+functions[zle-line-init]} )); then

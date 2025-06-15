@@ -238,4 +238,6 @@ _z-skk-post-load-init() {
     if (( ${+functions[z-skk-display-setup]} )); then
         z-skk-display-setup
     fi
+
+    # Keybindings will be set up via zle-line-init when the user starts editing
 }

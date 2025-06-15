@@ -9,6 +9,12 @@ typeset -g Z_SKK_DIR="${0:A:h}"
 
 # Initialize the plugin
 () {
+    # Prevent multiple initializations
+    if [[ -n "${Z_SKK_INITIALIZED:-}" ]]; then
+        return 0
+    fi
+    typeset -g Z_SKK_INITIALIZED=1
+
     local lib_dir="${Z_SKK_DIR}/lib"
 
     # Check if lib directory exists
