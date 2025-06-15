@@ -215,13 +215,23 @@ z-skk-init-dictionary-loading() {
 
     z-skk-debug "Dictionary paths: user=$Z_SKK_USER_JISYO_PATH, system=$Z_SKK_SYSTEM_JISYO_PATH"
 
+    # Check if cache is enabled (default: enabled)
+    local use_cache="${Z_SKK_USE_CACHE:-1}"
+
     # Load user dictionary if exists
     if [[ -f "$Z_SKK_USER_JISYO_PATH" ]]; then
         z-skk-debug "User dictionary file exists, loading..."
         _z-skk-log-error "info" "Loading user dictionary: $Z_SKK_USER_JISYO_PATH"
-        if ! z-skk-load-dictionary-file "$Z_SKK_USER_JISYO_PATH"; then
-            _z-skk-log-error "warn" "Failed to load user dictionary"
-            load_success=0
+        if [[ "$use_cache" == "1" ]] && (( ${+functions[z-skk-load-dictionary-with-cache]} )); then
+            if ! z-skk-load-dictionary-with-cache "$Z_SKK_USER_JISYO_PATH"; then
+                _z-skk-log-error "warn" "Failed to load user dictionary"
+                load_success=0
+            fi
+        else
+            if ! z-skk-load-dictionary-file "$Z_SKK_USER_JISYO_PATH"; then
+                _z-skk-log-error "warn" "Failed to load user dictionary"
+                load_success=0
+            fi
         fi
         z-skk-debug "User dictionary load complete"
     else
@@ -232,9 +242,16 @@ z-skk-init-dictionary-loading() {
     if [[ -n "$Z_SKK_SYSTEM_JISYO_PATH" && -f "$Z_SKK_SYSTEM_JISYO_PATH" ]]; then
         z-skk-debug "System dictionary file exists, loading..."
         _z-skk-log-error "info" "Loading system dictionary: $Z_SKK_SYSTEM_JISYO_PATH"
-        if ! z-skk-load-dictionary-file "$Z_SKK_SYSTEM_JISYO_PATH"; then
-            _z-skk-log-error "warn" "Failed to load system dictionary"
-            load_success=0
+        if [[ "$use_cache" == "1" ]] && (( ${+functions[z-skk-load-dictionary-with-cache]} )); then
+            if ! z-skk-load-dictionary-with-cache "$Z_SKK_SYSTEM_JISYO_PATH"; then
+                _z-skk-log-error "warn" "Failed to load system dictionary"
+                load_success=0
+            fi
+        else
+            if ! z-skk-load-dictionary-file "$Z_SKK_SYSTEM_JISYO_PATH"; then
+                _z-skk-log-error "warn" "Failed to load system dictionary"
+                load_success=0
+            fi
         fi
         z-skk-debug "System dictionary load complete"
     fi

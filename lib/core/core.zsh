@@ -58,6 +58,7 @@ typeset -gA Z_SKK_MODULE_DIRS=(
     [dictionary]="dictionary"
     [dictionary-data]="dictionary"
     [dictionary-io]="dictionary"
+    [dictionary-cache]="dictionary"
     [registration]="dictionary"
 
     # Display modules
@@ -95,6 +96,7 @@ typeset -gA Z_SKK_MODULES=(
 
     # Lazy-loaded modules (not loaded at startup)
     [dictionary-io]="required"  # Now required for proper initialization
+    [dictionary-cache]="required"  # Cache support for dictionaries
     [registration]="lazy"   # Loaded when needed
     [okurigana]="lazy"      # Loaded when needed
     [input-modes]="lazy"    # Loaded when needed
@@ -112,7 +114,7 @@ typeset -ga Z_SKK_MODULE_ORDER=(
     # Display system (needed by many modules)
     display display-api
     # Core systems
-    reset state dictionary dictionary-io modes
+    reset state dictionary dictionary-cache dictionary-io modes
     # Optional modules
     command-dispatch
     # Conversion modules (split for modularity)
