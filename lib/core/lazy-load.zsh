@@ -39,7 +39,8 @@ z-skk-lazy-load() {
         if z-skk-safe-source "$module_file"; then
             Z_SKK_LOADED_MODULES[$module]=1
             unset "Z_SKK_LOADING_MODULES[$module]"
-            _z-skk-log-error "info" "Lazy loaded module: $module"
+            # Only log lazy loading in debug mode
+            [[ -n "${Z_SKK_DEBUG:-}" ]] && _z-skk-log-error "info" "Lazy loaded module: $module"
             return 0
         else
             unset "Z_SKK_LOADING_MODULES[$module]"

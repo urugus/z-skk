@@ -272,11 +272,22 @@ _z-skk-handle-pre-conversion-input() {
 
     # Check for okurigana start
     if _z-skk-should-start-okurigana "$key"; then
-        z-skk-start-okurigana
-        z-skk-process-okurigana "$key"
-        Z_SKK_LAST_INPUT="$key"
-        z-skk-update-conversion-display
-        return
+        # Ensure okurigana functions are loaded
+        if ! (( ${+functions[z-skk-start-okurigana]} )); then
+            # Try to lazy load okurigana module
+            (( ${+functions[z-skk-lazy-load]} )) && z-skk-lazy-load okurigana
+        fi
+
+        # Now call the functions if they exist
+        if (( ${+functions[z-skk-start-okurigana]} )); then
+            z-skk-start-okurigana
+            if (( ${+functions[z-skk-process-okurigana]} )); then
+                z-skk-process-okurigana "$key"
+            fi
+            Z_SKK_LAST_INPUT="$key"
+            z-skk-update-conversion-display
+            return
+        fi
     fi
 
     # Normal character processing
@@ -286,6 +297,11 @@ _z-skk-handle-pre-conversion-input() {
 # Check if we should start okurigana mode
 _z-skk-should-start-okurigana() {
     local key="$1"
+
+    # Ensure okurigana functions are loaded if needed
+    if ! (( ${+functions[z-skk-is-pre-converting]} )); then
+        return 1
+    fi
 
     # Okurigana starts when:
     # 1. Current input is lowercase
@@ -319,11 +335,20 @@ _z-skk-handle-okurigana-marker() {
         if [[ -n "$Z_SKK_CONVERTED" ]]; then
             z-skk-append-to-buffer "$Z_SKK_CONVERTED"
         fi
-        # Start okurigana mode with the complete prefix
-        z-skk-start-okurigana
-        Z_SKK_LAST_INPUT="$key"
-        z-skk-update-conversion-display
-        return 0
+
+        # Ensure okurigana functions are loaded
+        if ! (( ${+functions[z-skk-start-okurigana]} )); then
+            # Try to lazy load okurigana module
+            (( ${+functions[z-skk-lazy-load]} )) && z-skk-lazy-load okurigana
+        fi
+
+        # Start okurigana mode with the complete prefix if function exists
+        if (( ${+functions[z-skk-start-okurigana]} )); then
+            z-skk-start-okurigana
+            Z_SKK_LAST_INPUT="$key"
+            z-skk-update-conversion-display
+            return 0
+        fi
     fi
     return 1
 }
@@ -334,7 +359,13 @@ _z-skk-process-by-mode() {
     local lower_key="${key:l}"
 
     if (( ${+functions[z-skk-is-okurigana-mode]} )) && z-skk-is-okurigana-mode; then
-        z-skk-process-okurigana "$lower_key"
+        if (( ${+functions[z-skk-process-okurigana]} )); then
+            z-skk-process-okurigana "$lower_key"
+        else
+            # Try to lazy load okurigana module
+            (( ${+functions[z-skk-lazy-load]} )) && z-skk-lazy-load okurigana
+            (( ${+functions[z-skk-process-okurigana]} )) && z-skk-process-okurigana "$lower_key"
+        fi
     else
         z-skk-process-romaji-input "$lower_key"
     fi

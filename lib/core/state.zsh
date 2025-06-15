@@ -114,6 +114,13 @@ z-skk-set-mode() {
     # Reset conversion state when changing modes
     z-skk-end-conversion
 
+    # Preload okurigana module for Japanese input modes
+    if [[ "$new_mode" == "hiragana" || "$new_mode" == "katakana" ]]; then
+        if ! (( ${+functions[z-skk-start-okurigana]} )) && (( ${+functions[z-skk-lazy-load]} )); then
+            z-skk-lazy-load okurigana
+        fi
+    fi
+
     # Reset mode-specific state
     if [[ "$old_mode" == "abbrev" ]]; then
         # Reset abbrev state when leaving abbrev mode
