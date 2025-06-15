@@ -8,6 +8,11 @@ typeset -g PROJECT_DIR="${TEST_DIR:h}"
 # Source test utilities
 source "$TEST_DIR/test_utils.zsh"
 
+# Disable cache and external dictionaries for tests
+export Z_SKK_USE_CACHE=0
+export Z_SKK_USER_JISYO_PATH="/dev/null"
+export Z_SKK_SYSTEM_JISYO_PATH="/dev/null"
+
 # Load the plugin
 source "$PROJECT_DIR/z-skk.plugin.zsh"
 

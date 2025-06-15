@@ -9,6 +9,9 @@ typeset -g PROJECT_DIR="${TEST_DIR:h}"
 # Source test utilities
 source "$TEST_DIR/test_utils.zsh"
 
+# Disable cache for tests
+export Z_SKK_USE_CACHE=0
+
 # Load the plugin
 source "$PROJECT_DIR/z-skk.plugin.zsh"
 
@@ -84,7 +87,7 @@ print "\nTesting hiragana mode:"
 Z_SKK_MODE="hiragana"
 Z_SKK_ROMAJI_BUFFER=""
 _z-skk-handle-hiragana-input "a"
-assert_equals "Hiragana mode 'a' input" "a" "$Z_SKK_ROMAJI_BUFFER"
+assert_equals "Hiragana mode 'a' input" "" "$Z_SKK_ROMAJI_BUFFER"
 
 # Test mode switching with 'l' key
 Z_SKK_MODE="hiragana"

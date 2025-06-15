@@ -40,6 +40,9 @@ start_test_session() {
     zpty -w "$session_name" "PS1='$ '"
     zpty -w "$session_name" "unsetopt zle"  # 一旦ZLEを無効化
 
+    # Disable cache for tests
+    zpty -w "$session_name" "export Z_SKK_USE_CACHE=0"
+
     # z-skkプラグインを読み込み
     zpty -w "$session_name" "source '$PROJECT_ROOT/z-skk.plugin.zsh'"
 

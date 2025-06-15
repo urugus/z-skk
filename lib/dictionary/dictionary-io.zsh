@@ -200,6 +200,10 @@ z-skk-init-dictionary-loading() {
     # Track loading status
     typeset -g Z_SKK_DICTIONARY_LOADED=0
 
+    # Clear only user dictionary before loading
+    Z_SKK_USER_DICTIONARY=()
+    # Keep built-in dictionary entries if they exist
+
     # Ensure error logging is available
     if ! (( ${+functions[_z-skk-log-error]} )); then
         # Define a simple fallback

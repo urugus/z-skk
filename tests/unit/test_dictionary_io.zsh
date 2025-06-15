@@ -15,6 +15,9 @@ mkdir -p "$TEST_DICT_DIR"
 # Set test dictionary paths
 export SKK_JISYO_PATH="$TEST_DICT_DIR/test.jisyo"
 
+# Disable cache for tests
+export Z_SKK_USE_CACHE=0
+
 # Load the plugin
 source "$PROJECT_DIR/z-skk.plugin.zsh"
 
