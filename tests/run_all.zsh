@@ -28,6 +28,14 @@ run_test() {
         (( TOTAL_SKIPPED++ ))
         return
     fi
+    
+    # Skip input handling test in CI as it requires interactive terminal
+    if [[ -n "$CI" && "$test_name" == "test_input_handling.zsh" ]]; then
+        print "${YELLOW}Skipping $test_name in CI environment (requires interactive terminal)${RESET}"
+        TEST_RESULTS[$test_name]="SKIPPED"
+        (( TOTAL_SKIPPED++ ))
+        return
+    fi
 
     print "Running: $test_name"
     print "---"
@@ -63,8 +71,20 @@ fi
 
 # Run integration tests
 if [[ -d "$TEST_DIR/integration" ]]; then
-    echo "\n${YELLOW}Running Integration Tests...${RESET}"
-    run_tests_in_dir "$TEST_DIR/integration" "test_*.zsh"
+    # Skip integration tests in CI environment as they require interactive terminal
+    if [[ -n "$CI" ]]; then
+        echo "\n${YELLOW}Skipping Integration Tests in CI environment...${RESET}"
+        for test_file in "$TEST_DIR/integration"/test_*.zsh; do
+            [[ -f "$test_file" ]] || continue
+            local test_name="${test_file:t}"
+            TEST_RESULTS[$test_name]="SKIPPED"
+            (( TOTAL_SKIPPED++ ))
+            print "${YELLOW}⚬ $test_name (skipped - requires interactive terminal)${RESET}"
+        done
+    else
+        echo "\n${YELLOW}Running Integration Tests...${RESET}"
+        run_tests_in_dir "$TEST_DIR/integration" "test_*.zsh"
+    fi
 fi
 
 # Run regression tests

@@ -56,6 +56,8 @@ jobs:
     
     - name: Run all tests
       shell: bash
+      env:
+        CI: true
       run: |
         if [[ -f tests/run_all.zsh ]]; then
           zsh tests/run_all.zsh
