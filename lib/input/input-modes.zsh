@@ -63,8 +63,36 @@ z-skk-handle-katakana-special() {
 
 # Process katakana input (for compatibility)
 z-skk-process-katakana-input() {
-    local input="$1"
-    z-skk-convert-romaji-to-katakana "$input"
+    local key="$1"
+
+    # Add key to romaji buffer
+    Z_SKK_ROMAJI_BUFFER+="$key"
+
+    # Try to convert romaji to hiragana first
+    z-skk-convert-romaji
+
+    if [[ -n "$Z_SKK_CONVERTED" ]]; then
+        # Convert hiragana to katakana
+        local katakana=$(z-skk-hiragana-to-katakana "$Z_SKK_CONVERTED")
+
+        if [[ -n "$katakana" ]]; then
+            if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
+                # Add to conversion buffer instead of direct insert
+                Z_SKK_BUFFER+="$katakana"
+            else
+                if (( ${+functions[z-skk-display-append]} )); then
+                    z-skk-display-append "$katakana"
+                else
+                    LBUFFER+="$katakana"
+                fi
+            fi
+
+            # Emit input processed event
+            if (( ${+functions[z-skk-emit]} )); then
+                z-skk-emit input:processed "$key" "$katakana"
+            fi
+        fi
+    fi
 }
 
 # Abbrev mode state
@@ -142,8 +170,13 @@ z-skk-update-mode-display() {
             RPROMPT="$Z_SKK_ORIGINAL_RPROMPT"
         fi
 
-        # Force prompt redraw
-        zle && zle reset-prompt
+        # Just redraw, don't reset the entire prompt
+        # reset-prompt can cause newlines in some terminals
+        if (( ${+functions[z-skk-safe-redraw]} )); then
+            z-skk-safe-redraw
+        elif zle; then
+            zle -R
+        fi
     fi
 }
 
