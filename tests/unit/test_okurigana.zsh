@@ -112,13 +112,13 @@ test_okuri_ari_format_lookup() {
     Z_SKK_DICTIONARY=()
     Z_SKK_DICTIONARY[おくr]="送る/贈る"
     Z_SKK_DICTIONARY[かえs]="返す/帰す"
-    
+
     # Test lookup with okurigana
     local result=$(z-skk-lookup-with-okurigana "おく" "る")
     assert '[[ -n "$result" ]]' "Found okuri-ari entry"
     assert '[[ "$result" == *"送る"* ]]' "Contains 送る"
-    
-    # Test with different okurigana  
+
+    # Test with different okurigana
     local result2=$(z-skk-lookup-with-okurigana "かえ" "す")
     assert '[[ -n "$result2" ]]' "Found かえs entry"
     assert '[[ "$result2" == *"返す"* ]]' "Contains 返す"

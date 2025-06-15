@@ -19,7 +19,7 @@ _z-skk-parse-dict-line() {
     local reading candidates
     local is_okurigana=0
     local okurigana_marker=""
-    
+
     # Skip empty lines
     [[ -z "$line" ]] && return 1
 
@@ -36,11 +36,11 @@ _z-skk-parse-dict-line() {
     if [[ $space_pos -le ${#line} ]]; then
         reading="${line[1,$((space_pos-1))]}"
         local rest="${line[$((space_pos+1)),-1]}"
-        
+
         # Trim spaces from rest
         rest="${rest## }"
         rest="${rest%% }"
-        
+
         # Check if rest starts with / and ends with /
         if [[ "$rest" == "/"*"/" ]]; then
             # Check for okuri-ari entries (reading ends with romaji letter)
@@ -53,11 +53,11 @@ _z-skk-parse-dict-line() {
                 # For now, store the full reading including marker
                 # The conversion system will handle okuri-ari lookups
             fi
-            
+
             # Remove leading / and trailing /
             candidates="${rest#/}"
             candidates="${candidates%/}"
-            
+
             # Return reading and candidates
             print -r -- "$reading"
             print -r -- "$candidates"
@@ -73,12 +73,12 @@ z-skk-load-dictionary-file() {
     local dict_file="$1"
     local -A target_dict
     local line reading candidates
-    
+
     # Ensure debug function exists
     if ! (( ${+functions[z-skk-debug]} )); then
         z-skk-debug() { [[ "${Z_SKK_DEBUG:-0}" == "1" ]] && print "z-skk DEBUG: $*" >&2 ; }
     fi
-    
+
     # Validate file
     if [[ ! -f "$dict_file" ]]; then
         _z-skk-log-error "warn" "Dictionary file not found: $dict_file"
@@ -111,7 +111,7 @@ z-skk-load-dictionary-file() {
                 _z-skk-log-error "warn" "Too many parse errors, stopping dictionary load"
                 break
             fi
-            
+
             if ((count >= max_entries)); then
                 z-skk-debug "Reached max entries limit ($max_entries), stopping dictionary load"
                 break
@@ -119,22 +119,22 @@ z-skk-load-dictionary-file() {
 
             # Skip empty lines quickly
             [[ -z "$line" || "$line" == ";;"* || "${line// /}" == "" ]] && continue
-            
+
             # Fast inline parsing instead of function call
             local space_pos="${line[(i) ]}"
             if [[ $space_pos -le ${#line} ]]; then
                 reading="${line[1,$((space_pos-1))]}"
                 local rest="${line[$((space_pos+1)),-1]}"
-                
+
                 # Trim and check format
                 rest="${rest## }"
                 rest="${rest%% }"
-                
+
                 if [[ "$rest" == "/"*"/" ]]; then
                     # Extract candidates
                     candidates="${rest#/}"
                     candidates="${candidates%/}"
-                    
+
                     # Simple assignment for new entries (most common case)
                     if [[ -z "${Z_SKK_DICTIONARY[$reading]}" ]]; then
                         Z_SKK_DICTIONARY[$reading]="$candidates"
@@ -199,7 +199,7 @@ z-skk-save-user-dictionary() {
 z-skk-init-dictionary-loading() {
     # Track loading status
     typeset -g Z_SKK_DICTIONARY_LOADED=0
-    
+
     # Ensure error logging is available
     if ! (( ${+functions[_z-skk-log-error]} )); then
         # Define a simple fallback
@@ -242,7 +242,7 @@ z-skk-init-dictionary-loading() {
     # Mark as loaded even if some dictionaries failed
     Z_SKK_DICTIONARY_LOADED=1
     z-skk-debug "Dictionary initialization complete"
-    
+
     return 0
 }
 

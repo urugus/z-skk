@@ -31,7 +31,7 @@ z-skk-lookup() {
     local reading="$1"
     local -a all_candidates=()
     local -A seen_candidates=()
-    
+
     # First check user dictionary (highest priority)
     if [[ -n "${Z_SKK_USER_DICTIONARY[$reading]}" ]]; then
         local -a user_candidates=("${(@s:/:)Z_SKK_USER_DICTIONARY[$reading]}")
@@ -43,7 +43,7 @@ z-skk-lookup() {
             fi
         done
     fi
-    
+
     # Then check main dictionary (includes built-in and loaded system dictionaries)
     if [[ -n "${Z_SKK_DICTIONARY[$reading]}" ]]; then
         local -a main_candidates=("${(@s:/:)Z_SKK_DICTIONARY[$reading]}")
@@ -55,14 +55,14 @@ z-skk-lookup() {
             fi
         done
     fi
-    
+
     # Return combined results
     if [[ ${#all_candidates[@]} -gt 0 ]]; then
         local IFS="/"
         print "${all_candidates[*]}"
         return 0
     fi
-    
+
     # Not found in any dictionary
     return 1
 }

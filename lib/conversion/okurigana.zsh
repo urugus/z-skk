@@ -101,7 +101,7 @@ z-skk-lookup-with-okurigana() {
             ぱ|ぴ|ぷ|ぺ|ぽ) okurigana_marker="p" ;;
             あ|い|う|え|お) okurigana_marker="a" ;;
         esac
-        
+
         if [[ -n "$okurigana_marker" ]]; then
             local okuri_key="${reading}${okurigana_marker}"
             if entry=$(z-skk-lookup "$okuri_key"); then
