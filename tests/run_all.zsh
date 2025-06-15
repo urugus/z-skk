@@ -28,7 +28,7 @@ run_test() {
         (( TOTAL_SKIPPED++ ))
         return
     fi
-    
+
     # Skip input handling test in CI as it requires interactive terminal
     if [[ -n "$CI" && "$test_name" == "test_input_handling.zsh" ]]; then
         print "${YELLOW}Skipping $test_name in CI environment (requires interactive terminal)${RESET}"
