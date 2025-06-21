@@ -69,6 +69,8 @@ typeset -gA Z_SKK_DICTIONARY=(
     [つか*った]="使った:used"
     [おも*う]="思う:to think"
     [おも*った]="思った:thought"
+    [さが*す]="探す:to search"
+    [さがs]="探す:to search"
 )
 
 # Dictionary index for first character lookup (performance optimization)
