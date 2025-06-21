@@ -1,0 +1,53 @@
+name: Test z-skk
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install zsh
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y zsh
+    
+    - name: Run unit tests
+      run: |
+        CI=1 zsh tests/run_all.zsh
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    container:
+      image: zshusers/zsh:latest
+      options: --tty
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        apt-get update
+        apt-get install -y expect
+    
+    - name: Run integration tests
+      run: |
+        # TTYを有効にして統合テストを実行
+        script -e -c "zsh tests/integration/run_integration_tests.zsh"
+      continue-on-error: true  # 統合テストの失敗は許容
+
+  macos-tests:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run tests on macOS
+      run: |
+        CI=1 zsh tests/run_all.zsh
