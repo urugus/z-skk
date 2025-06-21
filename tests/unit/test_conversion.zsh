@@ -69,6 +69,51 @@ assert_equals "Convert 'shi' to 'し'" "し" "${Z_SKK_ROMAJI_TO_HIRAGANA[shi]}"
 assert_equals "Convert 'chi' to 'ち'" "ち" "${Z_SKK_ROMAJI_TO_HIRAGANA[chi]}"
 assert_equals "Convert 'tsu' to 'つ'" "つ" "${Z_SKK_ROMAJI_TO_HIRAGANA[tsu]}"
 
+# Test sokuon (double consonant) detection
+print_section "Sokuon (Double Consonant) Tests"
+
+# Test sokuon detection function
+assert "(( \${+functions[z-skk-check-sokuon]} ))" "z-skk-check-sokuon function exists"
+
+# Test positive cases
+assert "z-skk-check-sokuon 'kk'" "Double 'k' detected as sokuon"
+assert "z-skk-check-sokuon 'pp'" "Double 'p' detected as sokuon"
+assert "z-skk-check-sokuon 'tt'" "Double 't' detected as sokuon"
+assert "z-skk-check-sokuon 'ss'" "Double 's' detected as sokuon"
+assert "z-skk-check-sokuon 'yapp'" "Double 'p' in 'yapp' detected as sokuon"
+
+# Test negative cases
+assert "! z-skk-check-sokuon 'ka'" "Different consonants not detected as sokuon"
+assert "! z-skk-check-sokuon 'aa'" "Double vowel not detected as sokuon"
+assert "! z-skk-check-sokuon 'nn'" "Double 'n' not detected as sokuon"
+assert "! z-skk-check-sokuon 'k'" "Single character not detected as sokuon"
+
+# Test sokuon conversion
+test_sokuon_conversion() {
+    # Reset state
+    Z_SKK_ROMAJI_BUFFER=""
+    Z_SKK_CONVERTED=""
+    LBUFFER=""
+
+    # Test "yappa" -> "やっぱ"
+    z-skk-process-romaji-input "y"
+    z-skk-process-romaji-input "a"
+    assert_equals "ya converts to や" "や" "$LBUFFER"
+
+    LBUFFER=""  # Reset for next test
+    z-skk-process-romaji-input "p"
+    z-skk-process-romaji-input "p"
+    assert_equals "pp converts to っ" "っ" "$LBUFFER"
+    assert_equals "Romaji buffer has single p" "p" "$Z_SKK_ROMAJI_BUFFER"
+
+    LBUFFER=""  # Reset for next test
+    z-skk-process-romaji-input "a"
+    assert_equals "pa converts to ぱ" "ぱ" "$LBUFFER"
+    assert_equals "Romaji buffer empty after pa" "" "$Z_SKK_ROMAJI_BUFFER"
+}
+
+test_sokuon_conversion
+
 # Test conversion function
 assert "(( \${+functions[z-skk-convert-romaji]} ))" "z-skk-convert-romaji function exists"
 

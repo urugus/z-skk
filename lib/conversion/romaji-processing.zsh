@@ -86,12 +86,56 @@ z-skk-convert-romaji() {
     Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER:1}"
 }
 
+# Check if this is a double consonant that should be converted to sokuon
+z-skk-check-sokuon() {
+    local buffer="$1"
+    local last_char="${buffer: -1}"
+
+    # Check if we have at least 2 characters and the last two are the same consonant
+    if [[ ${#buffer} -ge 2 ]] && [[ "${buffer: -2:1}" == "$last_char" ]]; then
+        # Check if it's a consonant that can be doubled (not vowels or 'n')
+        case "$last_char" in
+            [bcdghjklmprstwyz])
+                return 0  # This is a double consonant
+                ;;
+        esac
+    fi
+    return 1
+}
+
 # Process romaji input and update buffer
 z-skk-process-romaji-input() {
     local key="$1"
 
     # Add key to romaji buffer
     Z_SKK_ROMAJI_BUFFER+="$key"
+
+    # Check for double consonants (sokuon)
+    if z-skk-check-sokuon "$Z_SKK_ROMAJI_BUFFER"; then
+        # Remove the doubled consonant and add っ instead
+        local consonant="${Z_SKK_ROMAJI_BUFFER: -1}"
+        Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER:0:-2}"
+
+        # Insert っ
+        if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
+            Z_SKK_BUFFER+="っ"
+        else
+            if (( ${+functions[z-skk-display-append]} )); then
+                z-skk-display-append "っ"
+            else
+                LBUFFER+="っ"
+            fi
+        fi
+
+        # Keep the single consonant for next conversion
+        Z_SKK_ROMAJI_BUFFER="$consonant"
+
+        # Emit sokuon event if available
+        if (( ${+functions[z-skk-emit]} )); then
+            z-skk-emit input:processed "${consonant}${consonant}" "っ"
+        fi
+        return
+    fi
 
     # Try to convert
     if z-skk-convert-romaji; then
