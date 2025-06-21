@@ -89,8 +89,10 @@ z-skk-get-candidate-annotation() {
 
 # Initialize dictionary
 z-skk-init-dictionary() {
-    # For now, just ensure the dictionary is loaded
-    # In the future, this will load from files
+    # Load built-in dictionary data
+    if (( ${+functions[z-skk-load-dictionary-data]} )); then
+        z-skk-load-dictionary-data
+    fi
     return 0
 }
 
