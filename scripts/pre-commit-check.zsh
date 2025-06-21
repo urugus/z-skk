@@ -10,7 +10,8 @@ print ""
 
 # 1. Run all tests
 print "1. Running tests..."
-if zsh "$PROJECT_DIR/tests/run_all.zsh"; then
+# Set CI environment variable to skip interactive tests
+if CI=1 zsh "$PROJECT_DIR/tests/run_all.zsh"; then
     print "✓ All tests passed"
 else
     print "✗ Tests failed"
