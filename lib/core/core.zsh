@@ -9,6 +9,7 @@ typeset -g -a Z_SKK_CANDIDATES=()      # Conversion candidates
 typeset -g Z_SKK_CANDIDATE_INDEX=0     # Current candidate index
 typeset -g Z_SKK_PASS_THROUGH=0        # Pass through flag for input handling
 typeset -g Z_SKK_LAST_INPUT=""          # Last input character for okurigana detection
+typeset -g Z_SKK_CONVERSION_START_POS=0 # Cursor position when conversion started
 
 # Mode definitions are now in input-modes.zsh
 

@@ -47,6 +47,7 @@ z-skk-reset() {
         z-skk-set-converting-state 0 2>/dev/null || Z_SKK_CONVERTING=0
         Z_SKK_CANDIDATES=()
         Z_SKK_CANDIDATE_INDEX=0
+        Z_SKK_CONVERSION_START_POS=0
     fi
 
     # Romaji buffer reset

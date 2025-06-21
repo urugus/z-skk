@@ -138,7 +138,7 @@ z-skk-setup-keybindings() {
 
     # Ensure widgets are registered first
     z-skk-register-widgets
-    
+
     # Double-check that widgets were actually registered
     if ! (( ${+widgets[z-skk-self-insert]} )); then
         (( ${+functions[z-skk-debug]} )) && z-skk-debug "Warning: widgets not properly registered, aborting keybinding setup"
@@ -239,7 +239,7 @@ if [[ -o interactive ]]; then
 
     # Register our line-init
     zle -N zle-line-init z-skk-line-init
-    
+
     # Try early widget setup to prevent "undefined-key" messages
     _z-skk-early-widget-setup
 fi

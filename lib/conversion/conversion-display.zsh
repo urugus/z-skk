@@ -3,7 +3,7 @@
 
 # Update display during pre-conversion (▽ marker)
 z-skk-update-conversion-display() {
-    if [[ $Z_SKK_CONVERTING -eq 1 && -n "$Z_SKK_BUFFER" ]]; then
+    if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
         # Build display text based on mode
         local display_text="$Z_SKK_BUFFER"
 
@@ -30,8 +30,11 @@ z-skk-update-conversion-display() {
         # Clear previous marker before adding new one
         z-skk-clear-marker "▽" ""
 
-        # Update the display
-        z-skk-add-marker "▽" "$display_text"
+        # Instead of just appending, we need to replace from the conversion start position
+        # This ensures that when we start a new conversion after a cancellation,
+        # the marker appears at the correct position
+        local before_conversion="${LBUFFER:0:$Z_SKK_CONVERSION_START_POS}"
+        LBUFFER="${before_conversion}▽${display_text}"
 
         # Emit display updated event
         if (( ${+functions[z-skk-emit]} )); then

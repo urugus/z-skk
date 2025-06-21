@@ -44,6 +44,9 @@ z-skk-set-converting-state() {
 
 # Convenience functions for common state transitions
 z-skk-start-pre-conversion() {
+    # Record the current cursor position
+    Z_SKK_CONVERSION_START_POS=${#LBUFFER}
+
     z-skk-set-converting-state 1
     Z_SKK_BUFFER=""
     Z_SKK_ROMAJI_BUFFER=""
