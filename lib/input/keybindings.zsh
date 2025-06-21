@@ -138,6 +138,12 @@ z-skk-setup-keybindings() {
 
     # Ensure widgets are registered first
     z-skk-register-widgets
+    
+    # Double-check that widgets were actually registered
+    if ! (( ${+widgets[z-skk-self-insert]} )); then
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Warning: widgets not properly registered, aborting keybinding setup"
+        return 1
+    fi
 
     # Save original self-insert widget if not already saved
     if ! (( ${+widgets[.self-insert]} )); then
@@ -150,7 +156,8 @@ z-skk-setup-keybindings() {
     # Only bind if the widget exists
     if (( ${+widgets[z-skk-self-insert]} )); then
         for c in {' '..'~'}; do
-            bindkey "$c" z-skk-self-insert
+            # Use -- to properly handle special characters like '-'
+            bindkey -- "$c" z-skk-self-insert
         done
     else
         (( ${+functions[z-skk-debug]} )) && z-skk-debug "Warning: z-skk-self-insert widget not found, skipping character bindings"
