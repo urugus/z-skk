@@ -345,6 +345,8 @@ _z-skk-handle-okurigana-marker() {
         # Start okurigana mode with the complete prefix if function exists
         if (( ${+functions[z-skk-start-okurigana]} )); then
             z-skk-start-okurigana
+            # Initialize okurigana romaji buffer with lowercase version of the uppercase marker
+            Z_SKK_OKURIGANA_ROMAJI="${key:l}"
             Z_SKK_LAST_INPUT="$key"
             z-skk-update-conversion-display
             return 0

@@ -5,6 +5,7 @@
 typeset -g Z_SKK_OKURIGANA_MODE=0      # 0: not in okurigana, 1: in okurigana mode
 typeset -g Z_SKK_OKURIGANA_PREFIX=""   # Reading prefix before okurigana
 typeset -g Z_SKK_OKURIGANA_SUFFIX=""   # Okurigana suffix
+typeset -g Z_SKK_OKURIGANA_ROMAJI=""   # Romaji buffer for okurigana
 
 # Check if we should start okurigana mode
 # Called when uppercase letter is followed by lowercase
@@ -22,10 +23,59 @@ z-skk-check-okurigana-start() {
 
 # Start okurigana mode
 z-skk-start-okurigana() {
+    if [[ ${Z_SKK_DEBUG:-0} -eq 1 ]]; then
+        print "DEBUG: z-skk-start-okurigana called" >&2
+        print "DEBUG: Current ROMAJI='$Z_SKK_OKURIGANA_ROMAJI'" >&2
+    fi
+
     Z_SKK_OKURIGANA_MODE=1
     Z_SKK_OKURIGANA_PREFIX="$Z_SKK_BUFFER"
     Z_SKK_OKURIGANA_SUFFIX=""
+    # Don't reset ROMAJI if it's already set (e.g., from uppercase marker)
+    if [[ -z "$Z_SKK_OKURIGANA_ROMAJI" ]]; then
+        Z_SKK_OKURIGANA_ROMAJI=""
+    fi
     # Don't reset buffer - we'll continue building it
+}
+
+# Process okurigana romaji separately
+_z-skk-process-okurigana-romaji() {
+    local key="$1"
+
+    # Debug output
+    if [[ ${Z_SKK_DEBUG:-0} -eq 1 ]]; then
+        print "DEBUG: _z-skk-process-okurigana-romaji called with key='$key'" >&2
+        print "DEBUG: Before - ROMAJI='$Z_SKK_OKURIGANA_ROMAJI', SUFFIX='$Z_SKK_OKURIGANA_SUFFIX'" >&2
+    fi
+
+    # Add to okurigana romaji buffer
+    Z_SKK_OKURIGANA_ROMAJI+="$key"
+
+    # Try to convert
+    local converted
+    converted=$(z-skk-romaji-to-hiragana "$Z_SKK_OKURIGANA_ROMAJI")
+
+    if [[ ${Z_SKK_DEBUG:-0} -eq 1 ]]; then
+        print "DEBUG: Trying to convert '$Z_SKK_OKURIGANA_ROMAJI' -> '$converted'" >&2
+    fi
+
+    if [[ -n "$converted" ]]; then
+        # Successful conversion
+        Z_SKK_OKURIGANA_SUFFIX+="$converted"
+        Z_SKK_OKURIGANA_ROMAJI=""
+    else
+        # Check if it's a partial match
+        if ! z-skk-is-partial-romaji "$Z_SKK_OKURIGANA_ROMAJI"; then
+            # No match possible, output as-is
+            Z_SKK_OKURIGANA_SUFFIX+="$Z_SKK_OKURIGANA_ROMAJI"
+            Z_SKK_OKURIGANA_ROMAJI=""
+        fi
+        # If it's a partial match, keep accumulating
+    fi
+
+    if [[ ${Z_SKK_DEBUG:-0} -eq 1 ]]; then
+        print "DEBUG: After - ROMAJI='$Z_SKK_OKURIGANA_ROMAJI', SUFFIX='$Z_SKK_OKURIGANA_SUFFIX'" >&2
+    fi
 }
 
 # Process okurigana input
@@ -36,16 +86,11 @@ z-skk-process-okurigana() {
         return 1
     fi
 
-    # Process the lowercase letter for okurigana
-    z-skk-process-romaji-input "$key"
+    # Process the key specifically for okurigana
+    _z-skk-process-okurigana-romaji "$key"
 
-    # Calculate okurigana suffix by removing prefix from full buffer
-    if [[ -n "$Z_SKK_OKURIGANA_PREFIX" && -n "$Z_SKK_BUFFER" ]]; then
-        local prefix_len=${#Z_SKK_OKURIGANA_PREFIX}
-        if [[ ${#Z_SKK_BUFFER} -gt $prefix_len ]]; then
-            Z_SKK_OKURIGANA_SUFFIX="${Z_SKK_BUFFER:$prefix_len}"
-        fi
-    fi
+    # Store the last input for okurigana tracking
+    Z_SKK_LAST_INPUT="$key"
 
     return 0
 }
@@ -163,6 +208,7 @@ z-skk-reset-okurigana() {
     Z_SKK_OKURIGANA_MODE=0
     Z_SKK_OKURIGANA_PREFIX=""
     Z_SKK_OKURIGANA_SUFFIX=""
+    Z_SKK_OKURIGANA_ROMAJI=""
 }
 
 # Check if in okurigana mode

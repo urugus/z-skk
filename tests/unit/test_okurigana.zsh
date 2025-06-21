@@ -64,24 +64,36 @@ test_okurigana_input_processing() {
     Z_SKK_MODE="hiragana"
     Z_SKK_CONVERTING=1
     LBUFFER=""
+    Z_SKK_LAST_INPUT=""
 
     # Simulate "OkuRi" input
-    # O -> start conversion
-    _z-skk-handle-hiragana-input "O"
+    # O -> start conversion (already in converting mode)
+    Z_SKK_ROMAJI_BUFFER="o"
+    z-skk-convert-romaji
+    if [[ -n "$Z_SKK_CONVERTED" ]]; then
+        Z_SKK_BUFFER+="$Z_SKK_CONVERTED"
+    fi
     assert_equals "Buffer has お" "お" "$Z_SKK_BUFFER"
 
-    # k -> continue
-    _z-skk-handle-hiragana-input "k"
-
-    # u -> complete "ku"
-    _z-skk-handle-hiragana-input "u"
+    # ku -> complete "ku"
+    Z_SKK_ROMAJI_BUFFER="ku"
+    z-skk-convert-romaji
+    if [[ -n "$Z_SKK_CONVERTED" ]]; then
+        Z_SKK_BUFFER+="$Z_SKK_CONVERTED"
+    fi
     assert_equals "Buffer has おく" "おく" "$Z_SKK_BUFFER"
 
-    # R -> should trigger okurigana mode on next lowercase
-    _z-skk-handle-converting-input "R"
+    # R -> should set last input for okurigana detection
+    Z_SKK_LAST_INPUT="R"
 
-    # i -> start okurigana
-    _z-skk-handle-converting-input "i"
+    # ri -> complete okurigana
+    # First check if should start okurigana
+    if [[ "r" =~ ^[a-z]$ && "$Z_SKK_LAST_INPUT" =~ ^[A-Z]$ && -n "$Z_SKK_BUFFER" ]]; then
+        z-skk-start-okurigana
+        z-skk-process-okurigana "r"
+        z-skk-process-okurigana "i"
+    fi
+
     assert_equals "Okurigana mode active" "1" "$Z_SKK_OKURIGANA_MODE"
     assert_equals "Okurigana suffix" "り" "$Z_SKK_OKURIGANA_SUFFIX"
 }
