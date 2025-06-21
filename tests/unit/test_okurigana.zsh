@@ -152,8 +152,8 @@ test_okurigana_display() {
     # Update display
     z-skk-update-conversion-display
 
-    # The display shows buffer followed by asterisk and suffix
-    assert '[[ "$LBUFFER" == "▽おくり*り" ]]' "Display has marker and asterisk"
+    # The display shows buffer followed by suffix (no asterisk)
+    assert '[[ "$LBUFFER" == "▽おくりり" ]]' "Display has marker and suffix"
 }
 
 # Test okurigana reset
