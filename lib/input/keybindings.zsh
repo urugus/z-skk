@@ -147,9 +147,14 @@ z-skk-setup-keybindings() {
     # Bind printable characters to our widget
     local c
     # ASCII printable characters (space to ~)
-    for c in {' '..'~'}; do
-        bindkey "$c" z-skk-self-insert
-    done
+    # Only bind if the widget exists
+    if (( ${+widgets[z-skk-self-insert]} )); then
+        for c in {' '..'~'}; do
+            bindkey "$c" z-skk-self-insert
+        done
+    else
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Warning: z-skk-self-insert widget not found, skipping character bindings"
+    fi
 
     # Mode switching keys - only bind if widgets exist
     if (( ${+widgets[z-skk-toggle-kana]} )); then
@@ -178,6 +183,19 @@ z-skk-setup-keybindings() {
 # Initialize keybindings
 # Widgets and keybindings will be set up via zle-line-init and precmd hooks
 # to ensure zle is fully initialized
+
+# Try to register widgets early if ZLE is available
+# This prevents "undefined-key" messages during startup
+_z-skk-early-widget-setup() {
+    # Check if we're in an interactive shell with ZLE available
+    if [[ -o interactive ]] && (( ${+builtins[zle]} )); then
+        # Try to register widgets if not already done
+        if [[ -z "${Z_SKK_WIDGETS_REGISTERED:-}" ]]; then
+            (( ${+functions[z-skk-debug]} )) && z-skk-debug "Attempting early widget registration"
+            z-skk-register-widgets
+        fi
+    fi
+}
 
 # Setup keybindings on first line edit to ensure zle is ready
 z-skk-line-init() {
@@ -214,4 +232,7 @@ if [[ -o interactive ]]; then
 
     # Register our line-init
     zle -N zle-line-init z-skk-line-init
+    
+    # Try early widget setup to prevent "undefined-key" messages
+    _z-skk-early-widget-setup
 fi
