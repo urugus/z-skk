@@ -92,6 +92,122 @@ z-skk-keyboard-quit() {
     zle send-break
 }
 
+# Backspace widget
+z-skk-backspace() {
+    # Handle registration mode
+    if z-skk-is-registering; then
+        z-skk-registration-input $'\x7f'
+        return
+    fi
+
+    # Handle conversion modes
+    if [[ $Z_SKK_CONVERTING -eq 2 ]]; then
+        # In candidate selection mode, go back to pre-conversion
+        Z_SKK_CONVERTING=1
+        Z_SKK_CANDIDATE_INDEX=0
+
+        # Restore pre-conversion display
+        local prefix="${LBUFFER:0:$Z_SKK_CONVERSION_START_POS}"
+        LBUFFER="${prefix}▽${Z_SKK_BUFFER}${Z_SKK_OKURIGANA:+*$Z_SKK_OKURIGANA}"
+        return
+    elif [[ $Z_SKK_CONVERTING -eq 1 ]]; then
+        # In pre-conversion mode
+        if [[ -n "$Z_SKK_OKURIGANA" ]]; then
+            # Remove okurigana first
+            Z_SKK_OKURIGANA=""
+            local prefix="${LBUFFER:0:$Z_SKK_CONVERSION_START_POS}"
+            LBUFFER="${prefix}▽${Z_SKK_BUFFER}"
+            return
+        elif [[ -n "$Z_SKK_BUFFER" ]]; then
+            # Remove last character from buffers
+            # Handle multi-byte characters properly
+            local last_char="${Z_SKK_BUFFER: -1}"
+            Z_SKK_BUFFER="${Z_SKK_BUFFER%?}"
+
+            # Update romaji buffer
+            if [[ -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
+                # Simple heuristic: remove corresponding romaji
+                case "$last_char" in
+                    あ|ア) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%a}" ;;
+                    い|イ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%i}" ;;
+                    う|ウ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%u}" ;;
+                    え|エ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%e}" ;;
+                    お|オ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%o}" ;;
+                    か|カ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ka}" ;;
+                    き|キ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ki}" ;;
+                    く|ク) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ku}" ;;
+                    け|ケ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ke}" ;;
+                    こ|コ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ko}" ;;
+                    が|ガ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ga}" ;;
+                    ぎ|ギ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%gi}" ;;
+                    ぐ|グ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%gu}" ;;
+                    げ|ゲ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ge}" ;;
+                    ご|ゴ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%go}" ;;
+                    さ|サ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%sa}" ;;
+                    し|シ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%si}" ;;
+                    す|ス) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%su}" ;;
+                    せ|セ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%se}" ;;
+                    そ|ソ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%so}" ;;
+                    た|タ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ta}" ;;
+                    ち|チ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ti}" ;;
+                    つ|ツ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%tu}" ;;
+                    て|テ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%te}" ;;
+                    と|ト) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%to}" ;;
+                    な|ナ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%na}" ;;
+                    に|ニ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ni}" ;;
+                    ぬ|ヌ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%nu}" ;;
+                    ね|ネ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ne}" ;;
+                    の|ノ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%no}" ;;
+                    は|ハ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ha}" ;;
+                    ひ|ヒ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%hi}" ;;
+                    ふ|フ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%hu}" ;;
+                    へ|ヘ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%he}" ;;
+                    ほ|ホ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ho}" ;;
+                    ま|マ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ma}" ;;
+                    み|ミ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%mi}" ;;
+                    む|ム) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%mu}" ;;
+                    め|メ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%me}" ;;
+                    も|モ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%mo}" ;;
+                    や|ヤ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ya}" ;;
+                    ゆ|ユ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%yu}" ;;
+                    よ|ヨ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%yo}" ;;
+                    ら|ラ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ra}" ;;
+                    り|リ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ri}" ;;
+                    る|ル) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ru}" ;;
+                    れ|レ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%re}" ;;
+                    ろ|ロ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ro}" ;;
+                    わ|ワ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%wa}" ;;
+                    を|ヲ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%wo}" ;;
+                    ん|ン) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%n}" ;;
+                    # For きょ -> kyo etc.
+                    ょ|ョ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%o}" ;;
+                    ゃ|ャ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%a}" ;;
+                    ゅ|ュ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%u}" ;;
+                    # Default: try to remove last character
+                    *) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%?}" ;;
+                esac
+            fi
+
+            # Update display
+            if [[ -n "$Z_SKK_BUFFER" ]]; then
+                local prefix="${LBUFFER:0:$Z_SKK_CONVERSION_START_POS}"
+                LBUFFER="${prefix}▽${Z_SKK_BUFFER}"
+            else
+                # Buffer is empty, cancel conversion
+                z-skk-cancel-conversion
+            fi
+            return
+        else
+            # Buffer is already empty, cancel conversion
+            z-skk-cancel-conversion
+            return
+        fi
+    fi
+
+    # Default backspace behavior
+    zle backward-delete-char
+}
+
 # Register ZLE widgets
 z-skk-register-widgets() {
     # Skip if already registered
@@ -125,6 +241,7 @@ z-skk-register-widgets() {
     (( ${+functions[z-skk-zenkaku-mode]} )) && zle -N z-skk-zenkaku-mode
     (( ${+functions[z-skk-accept-line]} )) && zle -N z-skk-accept-line
     (( ${+functions[z-skk-keyboard-quit]} )) && zle -N z-skk-keyboard-quit
+    (( ${+functions[z-skk-backspace]} )) && zle -N z-skk-backspace
 
     # Mark as registered
     typeset -g Z_SKK_WIDGETS_REGISTERED=1
@@ -182,6 +299,8 @@ z-skk-setup-keybindings() {
     # Special keys - only bind if widgets exist
     (( ${+widgets[z-skk-accept-line]} )) && bindkey "^M" z-skk-accept-line    # Enter
     (( ${+widgets[z-skk-keyboard-quit]} )) && bindkey "^G" z-skk-keyboard-quit  # C-g
+    (( ${+widgets[z-skk-backspace]} )) && bindkey "^?" z-skk-backspace        # Backspace
+    (( ${+widgets[z-skk-backspace]} )) && bindkey "^H" z-skk-backspace        # Ctrl-H (alternate backspace)
 
     # Mark as setup
     typeset -g Z_SKK_KEYBINDINGS_SETUP=1
