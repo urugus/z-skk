@@ -34,11 +34,11 @@ z-skk-display-append() {
 z-skk-display-safe-redraw() {
     local force="${1:-0}"
 
-    # Only redraw if in interactive context and not in CI
-    if [[ -n "$ZLE_LINE_ABORTED" ]] || [[ -n "$CI" ]] || [[ -z "$WIDGET" ]]; then
+    # Only redraw if in interactive context and not in CI or test
+    if [[ -n "$ZLE_LINE_ABORTED" ]] || [[ -n "$CI" ]] || [[ -z "$WIDGET" ]] || [[ "${TEST_MODE:-0}" -eq 1 ]]; then
         if [[ "$force" -eq 1 ]]; then
-            if (( ${+functions[z-skk-log]} )); then
-                z-skk-log "warn" "Forced redraw in non-interactive context"
+            if (( ${+functions[_z-skk-log-error]} )) && [[ "${TEST_MODE:-0}" -eq 0 ]]; then
+                _z-skk-log-error "warn" "Forced redraw in non-interactive context"
             fi
         else
             return 0
@@ -47,8 +47,8 @@ z-skk-display-safe-redraw() {
 
     # Attempt redraw with error handling
     if ! zle -f redraw 2>/dev/null; then
-        if (( ${+functions[z-skk-log]} )); then
-            z-skk-log "warn" "Failed to redraw line"
+        if (( ${+functions[_z-skk-log-error]} )) && [[ "${TEST_MODE:-0}" -eq 0 ]]; then
+            _z-skk-log-error "warn" "Failed to redraw line"
         fi
         return 1
     fi

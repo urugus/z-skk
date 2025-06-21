@@ -3,6 +3,13 @@
 
 # Widget for self-insert (every printable character)
 z-skk-self-insert() {
+    # Check if z-skk is enabled
+    if [[ $Z_SKK_ENABLED -eq 0 ]]; then
+        # Pass through to default behavior when disabled
+        zle .self-insert
+        return
+    fi
+    
     # Get the character that was typed
     local key="$KEYS"
     
@@ -32,6 +39,12 @@ z-skk-self-insert() {
 
 # Widget for space key (candidate selection)
 z-skk-space() {
+    # Check if z-skk is enabled
+    if [[ $Z_SKK_ENABLED -eq 0 ]]; then
+        zle .self-insert
+        return
+    fi
+    
     # Prioritize space handling by mode
     if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
         # Start candidate selection
@@ -70,6 +83,12 @@ z-skk-space() {
 
 # Widget for Enter/Return key
 z-skk-accept-line() {
+    # Check if z-skk is enabled
+    if [[ $Z_SKK_ENABLED -eq 0 ]]; then
+        zle .accept-line
+        return
+    fi
+    
     # If in conversion mode, confirm conversion
     if [[ $Z_SKK_CONVERTING -gt 0 ]]; then
         z-skk-confirm-conversion
@@ -97,6 +116,12 @@ z-skk-accept-line() {
 
 # Widget for Ctrl-G (cancel)
 z-skk-cancel() {
+    # Check if z-skk is enabled
+    if [[ $Z_SKK_ENABLED -eq 0 ]]; then
+        zle send-break
+        return
+    fi
+    
     if [[ $Z_SKK_CONVERTING -gt 0 ]]; then
         z-skk-cancel-conversion
     else
@@ -106,6 +131,12 @@ z-skk-cancel() {
 
 # Backspace widget (now uses refactored handlers)
 z-skk-backspace() {
+    # Check if z-skk is enabled
+    if [[ $Z_SKK_ENABLED -eq 0 ]]; then
+        zle .backward-delete-char
+        return
+    fi
+    
     # Load backspace handlers if not already loaded
     if ! (( ${+functions[z-skk-backspace-in-registration]} )); then
         # Try to lazy load backspace handlers
@@ -145,12 +176,21 @@ z-skk-previous-candidate-widget() {
 
 # Toggle kana mode (Ctrl-J)
 z-skk-toggle-kana() {
+    # Check if z-skk is enabled
+    if [[ $Z_SKK_ENABLED -eq 0 ]]; then
+        zle .accept-line
+        return
+    fi
+    
     case "$Z_SKK_MODE" in
         ascii)
             z-skk-hiragana-mode
             ;;
-        hiragana|katakana|zenkaku|abbrev)
+        hiragana)
             z-skk-ascii-mode
+            ;;
+        katakana|zenkaku|abbrev)
+            z-skk-hiragana-mode
             ;;
         *)
             z-skk-ascii-mode  # Default fallback
@@ -160,6 +200,12 @@ z-skk-toggle-kana() {
 
 # ASCII mode (l/L key in hiragana mode is handled in input processing)
 z-skk-ascii-mode() {
+    # Check if z-skk is enabled
+    if [[ $Z_SKK_ENABLED -eq 0 ]]; then
+        zle .self-insert
+        return
+    fi
+    
     z-skk-set-mode "ascii"
     
     # Safe redraw
@@ -255,4 +301,27 @@ z-skk-setup-keybindings() {
     bindkey "x" z-skk-previous-candidate-widget
 
     (( ${+functions[z-skk-debug]} )) && z-skk-debug "Keybinding setup completed"
+}
+
+# Remove z-skk keybindings (restore defaults)
+z-skk-remove-keybindings() {
+    # Restore original key bindings to default behavior
+    bindkey "^J" accept-line            # Ctrl-J (restore default)
+    bindkey "^G" send-break             # Ctrl-G (restore default)
+    bindkey " " self-insert             # Space (restore default)
+    bindkey "^M" accept-line            # Enter (restore default)
+    bindkey "x" self-insert             # x (restore default)
+    
+    # Remove character bindings - restore self-insert for printable characters
+    local char
+    for char in {a..z} {A..Z} {0..9}; do
+        bindkey "$char" self-insert
+    done
+    
+    # Restore special characters
+    for char in "!" "@" "#" "$" "%" "^" "&" "*" "(" ")" "-" "_" "=" "+" "[" "]" "{" "}" "\\" "|" ";" ":" "'" "\"" "," "." "<" ">" "/" "?"; do
+        bindkey "$char" self-insert
+    done
+    
+    (( ${+functions[z-skk-debug]} )) && z-skk-debug "Keybindings removed"
 }

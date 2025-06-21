@@ -1,6 +1,9 @@
 #!/usr/bin/env zsh
 # Test framework utilities
 
+# Set test mode to suppress redraw warnings
+export TEST_MODE=1
+
 # Global test counters
 typeset -g TESTS_PASSED=0
 typeset -g TESTS_FAILED=0

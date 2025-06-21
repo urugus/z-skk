@@ -10,6 +10,7 @@ typeset -g Z_SKK_CANDIDATE_INDEX=0     # Current candidate index
 typeset -g Z_SKK_PASS_THROUGH=0        # Pass through flag for input handling
 typeset -g Z_SKK_LAST_INPUT=""          # Last input character for okurigana detection
 typeset -g Z_SKK_CONVERSION_START_POS=0 # Cursor position when conversion started
+typeset -g Z_SKK_ENABLED=1             # Plugin enabled flag
 
 # Mode definitions are now in input-modes.zsh
 
@@ -249,4 +250,57 @@ _z-skk-post-load-init() {
     fi
 
     # Keybindings will be set up via zle-line-init when the user starts editing
+}
+
+# Enable z-skk functionality
+z-skk-enable() {
+    Z_SKK_ENABLED=1
+    
+    # Restore keybindings if available
+    if (( ${+functions[z-skk-setup-keybindings]} )); then
+        z-skk-setup-keybindings
+    fi
+    
+    # Update display if available
+    if (( ${+functions[z-skk-update-display]} )); then
+        z-skk-update-display
+    fi
+    
+    # Emit enable event
+    if (( ${+functions[z-skk-emit]} )); then
+        z-skk-emit "z-skk:enabled"
+    fi
+}
+
+# Disable z-skk functionality
+z-skk-disable() {
+    Z_SKK_ENABLED=0
+    
+    # Reset to ASCII mode
+    Z_SKK_MODE="ascii"
+    
+    # Cancel any ongoing conversion
+    if (( ${+functions[z-skk-reset]} )); then
+        z-skk-reset all
+    fi
+    
+    # Remove keybindings if available
+    if (( ${+functions[z-skk-remove-keybindings]} )); then
+        z-skk-remove-keybindings
+    fi
+    
+    # Update display if available
+    if (( ${+functions[z-skk-update-display]} )); then
+        z-skk-update-display
+    fi
+    
+    # Emit disable event
+    if (( ${+functions[z-skk-emit]} )); then
+        z-skk-emit "z-skk:disabled"
+    fi
+}
+
+# Initialize z-skk (alias for z-skk-init for compatibility)
+z-skk-initialize() {
+    z-skk-init "$@"
 }
