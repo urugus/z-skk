@@ -72,6 +72,7 @@ typeset -gA Z_SKK_MODULE_DIRS=(
     # New refactored modules
     [buffer-manager]="core"
     [backspace-handlers]="input"
+    [state-manager]="core"
 )
 
 # Module loading configuration
@@ -88,6 +89,7 @@ typeset -gA Z_SKK_MODULES=(
     [command-dispatch]="optional"
     [buffer-manager]="required"  # Centralized buffer operations
     [backspace-handlers]="optional"  # Lazy-loaded backspace handlers
+    [state-manager]="optional"  # Enhanced state management
     [romaji-processing]="required"
     [candidate-management]="required"
     [conversion-display]="required"

@@ -134,9 +134,9 @@ z-skk-backspace() {
 }
 
 # Widget for 'x' key (previous candidate)
-z-skk-previous-candidate() {
+z-skk-previous-candidate-widget() {
     if [[ $Z_SKK_CONVERTING -eq 2 ]]; then
-        z-skk-prev-candidate
+        z-skk-previous-candidate
     else
         # Pass through to normal input handling
         z-skk-self-insert
@@ -214,9 +214,9 @@ z-skk-register-widgets() {
         (( ${+functions[z-skk-debug]} )) && z-skk-debug "Registered widget: z-skk-cancel"
     fi
 
-    if (( ${+functions[z-skk-previous-candidate]} )); then
-        zle -N z-skk-previous-candidate
-        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Registered widget: z-skk-previous-candidate"
+    if (( ${+functions[z-skk-previous-candidate-widget]} )); then
+        zle -N z-skk-previous-candidate-widget
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Registered widget: z-skk-previous-candidate-widget"
     fi
 
     if (( ${+functions[z-skk-ascii-mode]} )); then
@@ -252,7 +252,7 @@ z-skk-setup-keybindings() {
     bindkey "^G" z-skk-cancel           # Ctrl-G
 
     # Bind 'x' for previous candidate (will be handled contextually)
-    bindkey "x" z-skk-previous-candidate
+    bindkey "x" z-skk-previous-candidate-widget
 
     (( ${+functions[z-skk-debug]} )) && z-skk-debug "Keybinding setup completed"
 }

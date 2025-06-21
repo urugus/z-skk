@@ -24,6 +24,53 @@ _z-skk-log-error() {
     esac
 }
 
+# Unified error handler for operations
+z-skk-safe-operation() {
+    local operation_name="$1"
+    local operation_func="$2"
+    shift 2
+
+    # Execute operation with error handling
+    if ! "$operation_func" "$@" 2>/dev/null; then
+        _z-skk-log-error "warn" "Failed to execute $operation_name"
+        return 1
+    fi
+
+    return 0
+}
+
+# Safe function call with fallback
+z-skk-safe-call() {
+    local func_name="$1"
+    local fallback_func="$2"
+    shift 2
+
+    if (( ${+functions[$func_name]} )); then
+        "$func_name" "$@"
+    elif [[ -n "$fallback_func" ]] && (( ${+functions[$fallback_func]} )); then
+        "$fallback_func" "$@"
+    else
+        _z-skk-log-error "warn" "Function $func_name not available and no fallback provided"
+        return 1
+    fi
+}
+
+# Safe array access
+z-skk-safe-array-get() {
+    local array_name="$1"
+    local index="$2"
+    local default_value="$3"
+
+    # Use indirect reference to access array
+    local -n array_ref="$array_name"
+
+    if [[ -n "${array_ref[$index]}" ]]; then
+        echo "${array_ref[$index]}"
+    else
+        echo "$default_value"
+    fi
+}
+
 # Safe source a file with error handling
 z-skk-safe-source() {
     local file="$1"
