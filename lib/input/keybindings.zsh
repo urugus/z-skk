@@ -1,220 +1,179 @@
 #!/usr/bin/env zsh
-# Keybinding definitions and ZLE widgets for z-skk
+# Key bindings for z-skk (refactored version)
 
-# Enable/disable flag
-typeset -g Z_SKK_ENABLED=1
-
-# Enable z-skk
-z-skk-enable() {
-    Z_SKK_ENABLED=1
-    # Future: Update prompt/indicators
-}
-
-# Disable z-skk
-z-skk-disable() {
-    Z_SKK_ENABLED=0
-    # Reset any active conversion state
-    z-skk-reset-state
-    # Future: Update prompt/indicators
-}
-
-# Check if input should pass through
-z-skk-should-pass-through() {
-    # Pass through if disabled
-    if [[ $Z_SKK_ENABLED -eq 0 ]]; then
-        Z_SKK_PASS_THROUGH=1
-        return 0
-    fi
-
-    # In ASCII mode, everything passes through
-    if [[ $Z_SKK_MODE == "ascii" ]]; then
-        Z_SKK_PASS_THROUGH=1
-        return 0
-    fi
-
-    # Default: don't pass through (will be handled by SKK logic)
-    Z_SKK_PASS_THROUGH=0
-    return 1
-}
-
-# Main character input widget
+# Widget for self-insert (every printable character)
 z-skk-self-insert() {
-    # Check if functions are loaded
-    if ! (( ${+functions[z-skk-should-pass-through]} )) || ! (( ${+functions[z-skk-handle-input]} )); then
-        # Functions not loaded yet, pass through
-        zle .self-insert
-        return
-    fi
-
-    # Check if we should pass through
-    if z-skk-should-pass-through; then
-        # Pass through to default self-insert
-        zle .self-insert
-        return
-    fi
-
-    # Delegate to input handler
-    z-skk-handle-input "$KEYS"
+    # Get the character that was typed
+    local key="$KEYS"
+    
+    # Handle the character based on current mode
+    case "$Z_SKK_MODE" in
+        hiragana)
+            _z-skk-handle-hiragana-input "$key"
+            ;;
+        katakana)
+            _z-skk-handle-katakana-input "$key"
+            ;;
+        ascii)
+            _z-skk-handle-ascii-input "$key"
+            ;;
+        zenkaku)
+            _z-skk-handle-zenkaku-input "$key"
+            ;;
+        abbrev)
+            _z-skk-handle-abbrev-input "$key"
+            ;;
+        *)
+            # Unknown mode, fall back to ASCII
+            zle .self-insert
+            ;;
+    esac
 }
 
-# Accept line widget (Enter key)
-z-skk-accept-line() {
-    # Handle special states first
-    if z-skk-is-registering; then
-        z-skk-registration-input $'\r'
-        return
+# Widget for space key (candidate selection)
+z-skk-space() {
+    # Prioritize space handling by mode
+    if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
+        # Start candidate selection
+        z-skk-start-candidate-selection
     elif [[ $Z_SKK_CONVERTING -eq 2 ]]; then
-        # In candidate selection
-        z-skk-confirm-candidate
-        return
-    elif [[ $Z_SKK_CONVERTING -eq 1 ]]; then
-        # In pre-conversion
-        z-skk-cancel-conversion
-        return
+        # Next candidate
+        z-skk-next-candidate
+    elif [[ "$Z_SKK_MODE" == "hiragana" ]] || [[ "$Z_SKK_MODE" == "katakana" ]]; then
+        # Convert romaji buffer if any, then insert space
+        if [[ -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
+            z-skk-convert-romaji
+            if [[ -n "$Z_SKK_CONVERTED" ]]; then
+                if (( ${+functions[z-skk-display-append-batched]} )); then
+                    z-skk-display-append-batched "$Z_SKK_CONVERTED"
+                else
+                    LBUFFER+="$Z_SKK_CONVERTED"
+                fi
+            fi
+            if (( ${+functions[z-skk-romaji-buffer-clear]} )); then
+                z-skk-romaji-buffer-clear
+            else
+                Z_SKK_ROMAJI_BUFFER=""
+            fi
+        fi
+        # Insert space
+        if (( ${+functions[z-skk-display-append-batched]} )); then
+            z-skk-display-append-batched " "
+        else
+            LBUFFER+=" "
+        fi
+    else
+        # Default space behavior
+        zle .self-insert
     fi
-
-    # Default behavior
-    zle accept-line
 }
 
-# Cancel key widget (C-g)
-z-skk-keyboard-quit() {
-    # Handle special states
-    if z-skk-is-registering; then
-        z-skk-registration-input $'\x07'
-        return
-    elif [[ $Z_SKK_CONVERTING -ge 1 ]]; then
-        z-skk-cancel-conversion
-        return
+# Widget for Enter/Return key
+z-skk-accept-line() {
+    # If in conversion mode, confirm conversion
+    if [[ $Z_SKK_CONVERTING -gt 0 ]]; then
+        z-skk-confirm-conversion
+    else
+        # Convert any pending romaji
+        if [[ -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
+            z-skk-convert-romaji
+            if [[ -n "$Z_SKK_CONVERTED" ]]; then
+                if (( ${+functions[z-skk-display-append-batched]} )); then
+                    z-skk-display-append-batched "$Z_SKK_CONVERTED"
+                else
+                    LBUFFER+="$Z_SKK_CONVERTED"
+                fi
+            fi
+            if (( ${+functions[z-skk-romaji-buffer-clear]} )); then
+                z-skk-romaji-buffer-clear
+            else
+                Z_SKK_ROMAJI_BUFFER=""
+            fi
+        fi
+        # Default accept-line behavior
+        zle .accept-line
     fi
-
-    # Default behavior
-    zle send-break
 }
 
-# Backspace widget
+# Widget for Ctrl-G (cancel)
+z-skk-cancel() {
+    if [[ $Z_SKK_CONVERTING -gt 0 ]]; then
+        z-skk-cancel-conversion
+    else
+        zle send-break
+    fi
+}
+
+# Backspace widget (now uses refactored handlers)
 z-skk-backspace() {
+    # Load backspace handlers if not already loaded
+    if ! (( ${+functions[z-skk-backspace-in-registration]} )); then
+        # Try to lazy load backspace handlers
+        (( ${+functions[z-skk-lazy-load]} )) && z-skk-lazy-load backspace-handlers
+    fi
+
     # Handle registration mode
     if z-skk-is-registering; then
-        z-skk-registration-input $'\x7f'
+        z-skk-backspace-in-registration
         return
     fi
 
     # Handle conversion modes
     if [[ $Z_SKK_CONVERTING -eq 2 ]]; then
-        # In candidate selection mode, go back to pre-conversion
-        Z_SKK_CONVERTING=1
-        Z_SKK_CANDIDATE_INDEX=0
-
-        # Restore pre-conversion display
-        local prefix="${LBUFFER:0:$Z_SKK_CONVERSION_START_POS}"
-        LBUFFER="${prefix}▽${Z_SKK_BUFFER}${Z_SKK_OKURIGANA:+*$Z_SKK_OKURIGANA}"
+        # In candidate selection mode
+        z-skk-backspace-in-candidate-selection
         return
     elif [[ $Z_SKK_CONVERTING -eq 1 ]]; then
         # In pre-conversion mode
-        if [[ -n "$Z_SKK_OKURIGANA" ]]; then
-            # Remove okurigana first
-            Z_SKK_OKURIGANA=""
-            local prefix="${LBUFFER:0:$Z_SKK_CONVERSION_START_POS}"
-            LBUFFER="${prefix}▽${Z_SKK_BUFFER}"
-            return
-        elif [[ -n "$Z_SKK_BUFFER" ]]; then
-            # Remove last character from buffers
-            # Handle multi-byte characters properly
-            local last_char="${Z_SKK_BUFFER: -1}"
-            Z_SKK_BUFFER="${Z_SKK_BUFFER%?}"
-
-            # Update romaji buffer
-            if [[ -n "$Z_SKK_ROMAJI_BUFFER" ]]; then
-                # Simple heuristic: remove corresponding romaji
-                case "$last_char" in
-                    あ|ア) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%a}" ;;
-                    い|イ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%i}" ;;
-                    う|ウ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%u}" ;;
-                    え|エ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%e}" ;;
-                    お|オ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%o}" ;;
-                    か|カ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ka}" ;;
-                    き|キ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ki}" ;;
-                    く|ク) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ku}" ;;
-                    け|ケ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ke}" ;;
-                    こ|コ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ko}" ;;
-                    が|ガ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ga}" ;;
-                    ぎ|ギ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%gi}" ;;
-                    ぐ|グ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%gu}" ;;
-                    げ|ゲ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ge}" ;;
-                    ご|ゴ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%go}" ;;
-                    さ|サ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%sa}" ;;
-                    し|シ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%si}" ;;
-                    す|ス) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%su}" ;;
-                    せ|セ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%se}" ;;
-                    そ|ソ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%so}" ;;
-                    た|タ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ta}" ;;
-                    ち|チ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ti}" ;;
-                    つ|ツ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%tu}" ;;
-                    て|テ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%te}" ;;
-                    と|ト) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%to}" ;;
-                    な|ナ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%na}" ;;
-                    に|ニ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ni}" ;;
-                    ぬ|ヌ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%nu}" ;;
-                    ね|ネ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ne}" ;;
-                    の|ノ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%no}" ;;
-                    は|ハ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ha}" ;;
-                    ひ|ヒ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%hi}" ;;
-                    ふ|フ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%hu}" ;;
-                    へ|ヘ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%he}" ;;
-                    ほ|ホ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ho}" ;;
-                    ま|マ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ma}" ;;
-                    み|ミ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%mi}" ;;
-                    む|ム) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%mu}" ;;
-                    め|メ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%me}" ;;
-                    も|モ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%mo}" ;;
-                    や|ヤ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ya}" ;;
-                    ゆ|ユ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%yu}" ;;
-                    よ|ヨ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%yo}" ;;
-                    ら|ラ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ra}" ;;
-                    り|リ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ri}" ;;
-                    る|ル) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ru}" ;;
-                    れ|レ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%re}" ;;
-                    ろ|ロ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%ro}" ;;
-                    わ|ワ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%wa}" ;;
-                    を|ヲ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%wo}" ;;
-                    ん|ン) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%n}" ;;
-                    # For きょ -> kyo etc.
-                    ょ|ョ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%o}" ;;
-                    ゃ|ャ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%a}" ;;
-                    ゅ|ュ) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%u}" ;;
-                    # Default: try to remove last character
-                    *) Z_SKK_ROMAJI_BUFFER="${Z_SKK_ROMAJI_BUFFER%?}" ;;
-                esac
-            fi
-
-            # Update display
-            if [[ -n "$Z_SKK_BUFFER" ]]; then
-                local prefix="${LBUFFER:0:$Z_SKK_CONVERSION_START_POS}"
-                LBUFFER="${prefix}▽${Z_SKK_BUFFER}"
-            else
-                # Buffer is empty, cancel conversion
-                z-skk-cancel-conversion
-            fi
-            return
-        else
-            # Buffer is already empty, cancel conversion
-            z-skk-cancel-conversion
-            return
-        fi
+        z-skk-backspace-in-conversion
+        return
     fi
 
-    # Default backspace behavior
-    zle backward-delete-char
+    # Handle normal backspace (not in conversion mode)
+    z-skk-backspace-normal
 }
 
-# Register ZLE widgets
-z-skk-register-widgets() {
-    # Skip if already registered
-    [[ -n "${Z_SKK_WIDGETS_REGISTERED:-}" ]] && return 0
+# Widget for 'x' key (previous candidate)
+z-skk-previous-candidate() {
+    if [[ $Z_SKK_CONVERTING -eq 2 ]]; then
+        z-skk-prev-candidate
+    else
+        # Pass through to normal input handling
+        z-skk-self-insert
+    fi
+}
 
-    # Check if zle is available
-    if ! (( ${+builtins[zle]} )); then
+# Toggle kana mode (Ctrl-J)
+z-skk-toggle-kana() {
+    case "$Z_SKK_MODE" in
+        ascii)
+            z-skk-hiragana-mode
+            ;;
+        hiragana|katakana|zenkaku|abbrev)
+            z-skk-ascii-mode
+            ;;
+        *)
+            z-skk-ascii-mode  # Default fallback
+            ;;
+    esac
+}
+
+# ASCII mode (l/L key in hiragana mode is handled in input processing)
+z-skk-ascii-mode() {
+    z-skk-set-mode "ascii"
+    
+    # Safe redraw
+    if (( ${+functions[z-skk-display-safe-redraw]} )); then
+        z-skk-display-safe-redraw
+    else
+        (( ${+functions[z-skk-safe-redraw]} )) && z-skk-safe-redraw
+    fi
+}
+
+# Register all widgets
+z-skk-register-widgets() {
+    # Check if ZLE is available
+    if ! zle -l >/dev/null 2>&1; then
         (( ${+functions[z-skk-debug]} )) && z-skk-debug "ZLE not available, skipping widget registration"
         return 0
     fi
@@ -235,130 +194,65 @@ z-skk-register-widgets() {
         (( ${+functions[z-skk-debug]} )) && z-skk-debug "Function z-skk-toggle-kana not found!"
     fi
 
-    (( ${+functions[z-skk-ascii-mode]} )) && zle -N z-skk-ascii-mode
-    (( ${+functions[z-skk-hiragana-mode]} )) && zle -N z-skk-hiragana-mode
-    (( ${+functions[z-skk-katakana-mode]} )) && zle -N z-skk-katakana-mode
-    (( ${+functions[z-skk-zenkaku-mode]} )) && zle -N z-skk-zenkaku-mode
-    (( ${+functions[z-skk-accept-line]} )) && zle -N z-skk-accept-line
-    (( ${+functions[z-skk-keyboard-quit]} )) && zle -N z-skk-keyboard-quit
-    (( ${+functions[z-skk-backspace]} )) && zle -N z-skk-backspace
+    if (( ${+functions[z-skk-backspace]} )); then
+        zle -N z-skk-backspace
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Registered widget: z-skk-backspace"
+    fi
 
-    # Mark as registered
-    typeset -g Z_SKK_WIDGETS_REGISTERED=1
-    (( ${+functions[z-skk-debug]} )) && z-skk-debug "Widget registration complete"
+    if (( ${+functions[z-skk-space]} )); then
+        zle -N z-skk-space
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Registered widget: z-skk-space"
+    fi
+
+    if (( ${+functions[z-skk-accept-line]} )); then
+        zle -N z-skk-accept-line
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Registered widget: z-skk-accept-line"
+    fi
+
+    if (( ${+functions[z-skk-cancel]} )); then
+        zle -N z-skk-cancel
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Registered widget: z-skk-cancel"
+    fi
+
+    if (( ${+functions[z-skk-previous-candidate]} )); then
+        zle -N z-skk-previous-candidate
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Registered widget: z-skk-previous-candidate"
+    fi
+
+    if (( ${+functions[z-skk-ascii-mode]} )); then
+        zle -N z-skk-ascii-mode
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Registered widget: z-skk-ascii-mode"
+    fi
+
+    (( ${+functions[z-skk-debug]} )) && z-skk-debug "Widget registration completed"
 }
 
-# Setup keybindings
+# Set up key bindings
 z-skk-setup-keybindings() {
-    # Skip if already setup
-    [[ -n "${Z_SKK_KEYBINDINGS_SETUP:-}" ]] && return 0
-
-    # Ensure widgets are registered first
-    z-skk-register-widgets
-
-    # Double-check that widgets were actually registered
-    if ! (( ${+widgets[z-skk-self-insert]} )); then
-        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Warning: widgets not properly registered, aborting keybinding setup"
+    # Only set up if widgets are registered
+    if ! zle -l z-skk-self-insert >/dev/null 2>&1; then
+        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Widgets not registered, skipping keybinding setup"
         return 1
     fi
 
-    # Save original self-insert widget if not already saved
-    if ! (( ${+widgets[.self-insert]} )); then
-        zle -A self-insert .self-insert
-    fi
+    (( ${+functions[z-skk-debug]} )) && z-skk-debug "Setting up keybindings..."
 
-    # Bind printable characters to our widget
-    local c
-    # ASCII printable characters (space to ~)
-    # Only bind if the widget exists
-    if (( ${+widgets[z-skk-self-insert]} )); then
-        for c in {' '..'~'}; do
-            # Use -- to properly handle special characters like '-'
-            bindkey -- "$c" z-skk-self-insert
-        done
-    else
-        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Warning: z-skk-self-insert widget not found, skipping character bindings"
-    fi
+    # Bind self-insert to all printable characters
+    local char
+    for char in {a..z} {A..Z} {0..9} \! \" \# \$ \% \& \' \( \) \* \+ \, \- \. \/ \: \; \< \= \> \? \@ \[ \\ \] \^ \_ \` \{ \| \} \~; do
+        bindkey "$char" z-skk-self-insert
+    done
 
-    # Mode switching keys - only bind if widgets exist
-    if (( ${+widgets[z-skk-toggle-kana]} )); then
-        bindkey "^J" z-skk-toggle-kana    # Toggle hiragana/ascii
-    else
-        # Debug: widget not found, try to register it
-        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Widget z-skk-toggle-kana not found during keybinding setup"
-        # Try to register the widget if the function exists
-        if (( ${+functions[z-skk-toggle-kana]} )); then
-            zle -N z-skk-toggle-kana
-            bindkey "^J" z-skk-toggle-kana
-            (( ${+functions[z-skk-debug]} )) && z-skk-debug "Registered and bound z-skk-toggle-kana to ^J"
-        fi
-    fi
-    (( ${+widgets[z-skk-ascii-mode]} )) && bindkey "^L" z-skk-ascii-mode     # Force ASCII mode
-    (( ${+widgets[z-skk-zenkaku-mode]} )) && bindkey "^Q" z-skk-zenkaku-mode   # Zenkaku (full-width) mode
+    # Special key bindings
+    bindkey "^J" z-skk-toggle-kana      # Ctrl-J
+    bindkey "^?" z-skk-backspace        # Backspace
+    bindkey "^H" z-skk-backspace        # Ctrl-H (also backspace)
+    bindkey " " z-skk-space             # Space
+    bindkey "^M" z-skk-accept-line      # Enter
+    bindkey "^G" z-skk-cancel           # Ctrl-G
 
-    # Special keys - only bind if widgets exist
-    (( ${+widgets[z-skk-accept-line]} )) && bindkey "^M" z-skk-accept-line    # Enter
-    (( ${+widgets[z-skk-keyboard-quit]} )) && bindkey "^G" z-skk-keyboard-quit  # C-g
-    (( ${+widgets[z-skk-backspace]} )) && bindkey "^?" z-skk-backspace        # Backspace
-    (( ${+widgets[z-skk-backspace]} )) && bindkey "^H" z-skk-backspace        # Ctrl-H (alternate backspace)
+    # Bind 'x' for previous candidate (will be handled contextually)
+    bindkey "x" z-skk-previous-candidate
 
-    # Mark as setup
-    typeset -g Z_SKK_KEYBINDINGS_SETUP=1
+    (( ${+functions[z-skk-debug]} )) && z-skk-debug "Keybinding setup completed"
 }
-
-# Initialize keybindings
-# Widgets and keybindings will be set up via zle-line-init and precmd hooks
-# to ensure zle is fully initialized
-
-# Try to register widgets early if ZLE is available
-# This prevents "undefined-key" messages during startup
-_z-skk-early-widget-setup() {
-    # Check if we're in an interactive shell with ZLE available
-    if [[ -o interactive ]] && (( ${+builtins[zle]} )); then
-        # Try to register widgets if not already done
-        if [[ -z "${Z_SKK_WIDGETS_REGISTERED:-}" ]]; then
-            (( ${+functions[z-skk-debug]} )) && z-skk-debug "Attempting early widget registration"
-            z-skk-register-widgets
-        fi
-    fi
-}
-
-# Setup keybindings on first line edit to ensure zle is ready
-z-skk-line-init() {
-    # Register widgets and setup keybindings if not already done
-    if [[ -z "${Z_SKK_KEYBINDINGS_SETUP:-}" ]]; then
-        (( ${+functions[z-skk-debug]} )) && z-skk-debug "Running zle-line-init setup"
-        z-skk-register-widgets
-        z-skk-setup-keybindings
-
-        # Verify Ctrl+J is bound
-        if [[ "$(bindkey '^J' 2>/dev/null)" != *"z-skk-toggle-kana"* ]]; then
-            (( ${+functions[z-skk-debug]} )) && z-skk-debug "Warning: Ctrl+J binding failed"
-        fi
-    fi
-
-    # Call original zle-line-init if it exists
-    if (( ${+functions[_z-skk-orig-line-init]} )); then
-        _z-skk-orig-line-init "$@"
-    fi
-}
-
-# Alternative setup function that can be called manually if needed
-z-skk-setup() {
-    z-skk-register-widgets
-    z-skk-setup-keybindings
-}
-
-# Only setup hooks in interactive shells
-if [[ -o interactive ]]; then
-    # Save original zle-line-init if it exists
-    if (( ${+functions[zle-line-init]} )); then
-        functions[_z-skk-orig-line-init]="${functions[zle-line-init]}"
-    fi
-
-    # Register our line-init
-    zle -N zle-line-init z-skk-line-init
-
-    # Try early widget setup to prevent "undefined-key" messages
-    _z-skk-early-widget-setup
-fi

@@ -30,6 +30,98 @@ z-skk-display-append() {
     fi
 }
 
+# Safe redraw operation with error handling
+z-skk-display-safe-redraw() {
+    local force="${1:-0}"
+
+    # Only redraw if in interactive context and not in CI
+    if [[ -n "$ZLE_LINE_ABORTED" ]] || [[ -n "$CI" ]] || [[ -z "$WIDGET" ]]; then
+        if [[ "$force" -eq 1 ]]; then
+            if (( ${+functions[z-skk-log]} )); then
+                z-skk-log "warn" "Forced redraw in non-interactive context"
+            fi
+        else
+            return 0
+        fi
+    fi
+
+    # Attempt redraw with error handling
+    if ! zle -f redraw 2>/dev/null; then
+        if (( ${+functions[z-skk-log]} )); then
+            z-skk-log "warn" "Failed to redraw line"
+        fi
+        return 1
+    fi
+
+    # Emit redraw event
+    if (( ${+functions[z-skk-emit]} )); then
+        z-skk-emit "display:redrawn" "$force"
+    fi
+
+    return 0
+}
+
+# Update conversion display with marker
+z-skk-display-update-marker() {
+    local marker="$1"
+    local content="$2"
+    local clear_previous="${3:-1}"
+
+    # Clear previous marker if requested
+    if [[ "$clear_previous" -eq 1 ]]; then
+        z-skk-display-clear-marker "▽" ""
+        z-skk-display-clear-marker "▼" ""
+    fi
+
+    # Add new marker
+    z-skk-add-marker "$marker" "$content"
+
+    # Safe redraw
+    z-skk-display-safe-redraw
+
+    # Emit marker update event
+    if (( ${+functions[z-skk-emit]} )); then
+        z-skk-emit "display:marker-updated" "$marker" "$content"
+    fi
+}
+
+# Clear specific marker from display
+z-skk-display-clear-marker() {
+    local marker="$1"
+    local replacement="$2"
+
+    # Use existing clear-marker function
+    z-skk-clear-marker "$marker" "$replacement"
+
+    # Emit marker clear event
+    if (( ${+functions[z-skk-emit]} )); then
+        z-skk-emit "display:marker-cleared" "$marker"
+    fi
+}
+
+# Batch display operations (prevents multiple redraws)
+z-skk-display-batch-start() {
+    typeset -g Z_SKK_DISPLAY_BATCH_MODE=1
+}
+
+z-skk-display-batch-end() {
+    typeset -g Z_SKK_DISPLAY_BATCH_MODE=0
+    z-skk-display-safe-redraw
+}
+
+# Enhanced append that respects batch mode
+z-skk-display-append-batched() {
+    local text="$1"
+    local at_cursor="${2:-1}"
+
+    z-skk-display-append "$text" "$at_cursor"
+
+    # Only redraw if not in batch mode
+    if [[ "${Z_SKK_DISPLAY_BATCH_MODE:-0}" -eq 0 ]]; then
+        z-skk-display-safe-redraw
+    fi
+}
+
 # Insert text at specific position
 z-skk-display-insert() {
     local text="$1"

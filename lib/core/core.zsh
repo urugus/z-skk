@@ -68,6 +68,10 @@ typeset -gA Z_SKK_MODULE_DIRS=(
 
     # Utils modules
     [utils]="utils"
+    
+    # New refactored modules
+    [buffer-manager]="core"
+    [backspace-handlers]="input"
 )
 
 # Module loading configuration
@@ -82,6 +86,8 @@ typeset -gA Z_SKK_MODULES=(
     [events]="required"     # Event system for loose coupling
     [lazy-load]="required"  # Lazy loading infrastructure
     [command-dispatch]="optional"
+    [buffer-manager]="required"  # Centralized buffer operations
+    [backspace-handlers]="optional"  # Lazy-loaded backspace handlers
     [romaji-processing]="required"
     [candidate-management]="required"
     [conversion-display]="required"
