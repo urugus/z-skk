@@ -249,12 +249,23 @@ _z-skk-post-load-init() {
         z-skk-display-setup
     fi
 
-    # Keybindings will be set up via zle-line-init when the user starts editing
+    # Register widgets and set up keybindings
+    if (( ${+functions[z-skk-register-widgets]} )); then
+        z-skk-register-widgets
+    fi
+    if (( ${+functions[z-skk-setup-keybindings]} )); then
+        z-skk-setup-keybindings
+    fi
 }
 
 # Enable z-skk functionality
 z-skk-enable() {
     Z_SKK_ENABLED=1
+
+    # Register widgets first (in case they weren't registered yet)
+    if (( ${+functions[z-skk-register-widgets]} )); then
+        z-skk-register-widgets
+    fi
 
     # Restore keybindings if available
     if (( ${+functions[z-skk-setup-keybindings]} )); then
