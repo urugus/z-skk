@@ -149,12 +149,12 @@ z-skk-hiragana-to-romaji() {
 # Convert hiragana string to romaji (for backspace reconstruction)
 z-skk-hiragana-to-romaji-string() {
     local hiragana_string="$1"
-    
+
     # Initialize mapping if not already done
     if [[ ${#_Z_SKK_HIRAGANA_TO_ROMAJI[@]} -eq 0 ]]; then
         z-skk-init-hiragana-to-romaji-map
     fi
-    
+
     # Simple approach: use existing romaji buffer logic from original tests
     # For complex cases like "きょう" -> "kyo", we need special handling
     case "$hiragana_string" in

@@ -69,7 +69,7 @@ typeset -gA Z_SKK_MODULE_DIRS=(
 
     # Utils modules
     [utils]="utils"
-    
+
     # New refactored modules
     [buffer-manager]="core"
     [backspace-handlers]="input"
@@ -108,13 +108,13 @@ typeset -gA Z_SKK_MODULES=(
     [dictionary-io]="required"  # Now required for proper initialization
     [dictionary-cache]="required"  # Cache support for dictionaries
     [registration]="lazy"   # Loaded when needed
-    [okurigana]="lazy"      # Loaded when needed
+    [okurigana]="required"  # Required for okurigana processing
     [input-modes]="lazy"    # Loaded when needed
     [special-keys]="lazy"   # Loaded when needed
 )
 
 # Module loading order (important for dependencies)
-# Note: Lazy-loaded modules (registration, okurigana, input-modes, special-keys)
+# Note: Lazy-loaded modules (registration, input-modes, special-keys)
 # are NOT included here as they will be loaded on demand
 typeset -ga Z_SKK_MODULE_ORDER=(
     # Base infrastructure (no dependencies)
@@ -128,7 +128,7 @@ typeset -ga Z_SKK_MODULE_ORDER=(
     # Optional modules
     command-dispatch
     # Conversion modules (split for modularity)
-    romaji-processing candidate-management
+    romaji-processing candidate-management okurigana
     conversion-display conversion-control
     # Compatibility layer
     conversion
@@ -255,17 +255,17 @@ _z-skk-post-load-init() {
 # Enable z-skk functionality
 z-skk-enable() {
     Z_SKK_ENABLED=1
-    
+
     # Restore keybindings if available
     if (( ${+functions[z-skk-setup-keybindings]} )); then
         z-skk-setup-keybindings
     fi
-    
+
     # Update display if available
     if (( ${+functions[z-skk-update-display]} )); then
         z-skk-update-display
     fi
-    
+
     # Emit enable event
     if (( ${+functions[z-skk-emit]} )); then
         z-skk-emit "z-skk:enabled"
@@ -275,25 +275,25 @@ z-skk-enable() {
 # Disable z-skk functionality
 z-skk-disable() {
     Z_SKK_ENABLED=0
-    
+
     # Reset to ASCII mode
     Z_SKK_MODE="ascii"
-    
+
     # Cancel any ongoing conversion
     if (( ${+functions[z-skk-reset]} )); then
         z-skk-reset all
     fi
-    
+
     # Remove keybindings if available
     if (( ${+functions[z-skk-remove-keybindings]} )); then
         z-skk-remove-keybindings
     fi
-    
+
     # Update display if available
     if (( ${+functions[z-skk-update-display]} )); then
         z-skk-update-display
     fi
-    
+
     # Emit disable event
     if (( ${+functions[z-skk-emit]} )); then
         z-skk-emit "z-skk:disabled"

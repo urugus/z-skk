@@ -14,9 +14,15 @@ z-skk-update-conversion-display() {
 
         # Add okurigana suffix if in okurigana mode and have suffix
         if (( ${+functions[z-skk-is-okurigana-mode]} )) && z-skk-is-okurigana-mode; then
-            # Only add the converted okurigana suffix, not the marker or romaji buffer
+            # Add * marker for okurigana
+            display_text+="*"
+            # Add the converted okurigana suffix
             if [[ -n "$Z_SKK_OKURIGANA_SUFFIX" ]]; then
                 display_text+="$Z_SKK_OKURIGANA_SUFFIX"
+            fi
+            # Add remaining romaji buffer if any
+            if [[ -n "$Z_SKK_OKURIGANA_ROMAJI" ]]; then
+                display_text+="$Z_SKK_OKURIGANA_ROMAJI"
             fi
         fi
 

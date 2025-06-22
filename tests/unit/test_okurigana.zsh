@@ -104,7 +104,7 @@ test_okurigana_conversion() {
     z-skk-reset-state
     Z_SKK_MODE="hiragana"
     Z_SKK_CONVERTING=1
-    Z_SKK_BUFFER="おくり"  # Full buffer with okurigana
+    Z_SKK_BUFFER="おくり"  # Buffer contains full text before conversion
     Z_SKK_OKURIGANA_MODE=1
     Z_SKK_OKURIGANA_PREFIX="おく"
     Z_SKK_OKURIGANA_SUFFIX=""  # Will be set by complete_okurigana
@@ -150,7 +150,7 @@ test_okurigana_display() {
     Z_SKK_CONVERTING=1
     Z_SKK_OKURIGANA_MODE=1
     Z_SKK_OKURIGANA_PREFIX="おく"
-    Z_SKK_BUFFER="おくり"
+    Z_SKK_BUFFER="おく"
     # Calculate the suffix from buffer and prefix
     Z_SKK_OKURIGANA_SUFFIX="り"
     LBUFFER=""
@@ -158,8 +158,8 @@ test_okurigana_display() {
     # Update display
     z-skk-update-conversion-display
 
-    # The display shows buffer followed by suffix (no asterisk)
-    assert '[[ "$LBUFFER" == "▽おくりり" ]]' "Display has marker and suffix"
+    # The display shows buffer with asterisk and suffix
+    assert '[[ "$LBUFFER" == "▽おく*り" ]]' "Display has marker and suffix"
 }
 
 # Test okurigana reset

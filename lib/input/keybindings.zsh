@@ -9,10 +9,10 @@ z-skk-self-insert() {
         zle .self-insert
         return
     fi
-    
+
     # Get the character that was typed
     local key="$KEYS"
-    
+
     # Handle the character based on current mode
     case "$Z_SKK_MODE" in
         hiragana)
@@ -44,11 +44,11 @@ z-skk-space() {
         zle .self-insert
         return
     fi
-    
+
     # Prioritize space handling by mode
     if [[ $Z_SKK_CONVERTING -eq 1 ]]; then
-        # Start candidate selection
-        z-skk-start-candidate-selection
+        # Start conversion and candidate selection
+        z-skk-start-conversion
     elif [[ $Z_SKK_CONVERTING -eq 2 ]]; then
         # Next candidate
         z-skk-next-candidate
@@ -88,7 +88,7 @@ z-skk-accept-line() {
         zle .accept-line
         return
     fi
-    
+
     # If in conversion mode, confirm conversion
     if [[ $Z_SKK_CONVERTING -gt 0 ]]; then
         z-skk-confirm-conversion
@@ -121,7 +121,7 @@ z-skk-cancel() {
         zle send-break
         return
     fi
-    
+
     if [[ $Z_SKK_CONVERTING -gt 0 ]]; then
         z-skk-cancel-conversion
     else
@@ -136,7 +136,7 @@ z-skk-backspace() {
         zle .backward-delete-char
         return
     fi
-    
+
     # Load backspace handlers if not already loaded
     if ! (( ${+functions[z-skk-backspace-in-registration]} )); then
         # Try to lazy load backspace handlers
@@ -181,7 +181,7 @@ z-skk-toggle-kana() {
         zle .accept-line
         return
     fi
-    
+
     case "$Z_SKK_MODE" in
         ascii)
             z-skk-hiragana-mode
@@ -205,9 +205,9 @@ z-skk-ascii-mode() {
         zle .self-insert
         return
     fi
-    
+
     z-skk-set-mode "ascii"
-    
+
     # Safe redraw
     if (( ${+functions[z-skk-display-safe-redraw]} )); then
         z-skk-display-safe-redraw
@@ -311,17 +311,17 @@ z-skk-remove-keybindings() {
     bindkey " " self-insert             # Space (restore default)
     bindkey "^M" accept-line            # Enter (restore default)
     bindkey "x" self-insert             # x (restore default)
-    
+
     # Remove character bindings - restore self-insert for printable characters
     local char
     for char in {a..z} {A..Z} {0..9}; do
         bindkey "$char" self-insert
     done
-    
+
     # Restore special characters
     for char in "!" "@" "#" "$" "%" "^" "&" "*" "(" ")" "-" "_" "=" "+" "[" "]" "{" "}" "\\" "|" ";" ":" "'" "\"" "," "." "<" ">" "/" "?"; do
         bindkey "$char" self-insert
     done
-    
+
     (( ${+functions[z-skk-debug]} )) && z-skk-debug "Keybindings removed"
 }
