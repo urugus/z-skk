@@ -113,12 +113,14 @@ z-skk-update-marker() {
 
 # Safe ZLE redraw with error handling
 z-skk-safe-redraw() {
-    zle -R || {
-        if (( ${+functions[_z-skk-log-error]} )); then
-            _z-skk-log-error "warn" "Failed to redraw line"
-        fi
-        return 1
-    }
+    # ZLEコンテキストのチェック
+    if [[ -z "$WIDGET" ]] || ! zle 2>/dev/null; then
+        # ZLEコンテキスト外では再描画をスキップ
+        return 0
+    fi
+
+    # エラーを静かに処理して再描画を試みる
+    zle -R 2>/dev/null || return 1
     return 0
 }
 

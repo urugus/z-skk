@@ -45,11 +45,9 @@ z-skk-display-safe-redraw() {
         fi
     fi
 
-    # Attempt redraw with error handling
+    # 再描画を試みる（エラーハンドリング付き）
     if ! zle -f redraw 2>/dev/null; then
-        if (( ${+functions[_z-skk-log-error]} )) && [[ "${TEST_MODE:-0}" -eq 0 ]]; then
-            _z-skk-log-error "warn" "Failed to redraw line"
-        fi
+        # 静かに失敗 - 再描画は必須ではない
         return 1
     fi
 
